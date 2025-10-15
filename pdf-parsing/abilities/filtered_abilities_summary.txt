@@ -1,0 +1,30 @@
+DRAW STEEL ABILITIES - FILTERED RESULTS
+Pages 1-75
+================================================================================
+
+Total Valid Abilities: 9
+Pages with Abilities: 5
+
+================================================================================
+BY PAGE
+================================================================================
+
+Page 32: 2 abilities
+  - Melee Weapon Free Strike
+  - Ranged Weapon Free Strike
+
+Page 44: 2 abilities
+  - Draconian Pride
+  - Dragon Breath
+
+Page 48: 1 abilities
+  - The Wode Defends
+
+Page 62: 1 abilities
+  - Detonate Sigil
+
+Page 65: 3 abilities
+  - Concussive Slam
+  - Psionic Bolt
+  - Minor Acceleration
+

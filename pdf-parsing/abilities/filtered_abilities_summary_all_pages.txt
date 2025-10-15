@@ -1,0 +1,680 @@
+DRAW STEEL ABILITIES - FILTERED RESULTS
+Pages 1-75
+================================================================================
+
+Total Valid Abilities: 423
+Pages with Abilities: 123
+
+================================================================================
+BY PAGE
+================================================================================
+
+Page 32: 2 abilities
+  - Melee Weapon Free Strike
+  - Ranged Weapon Free Strike
+
+Page 44: 2 abilities
+  - Draconian Pride
+  - Dragon Breath
+
+Page 48: 1 abilities
+  - The Wode Defends
+
+Page 62: 1 abilities
+  - Detonate Sigil
+
+Page 65: 3 abilities
+  - Concussive Slam
+  - Psionic Bolt
+  - Minor Acceleration
+
+Page 95: 1 abilities
+  - Judgment
+
+Page 97: 6 abilities
+  - Back Blasphemer!
+  - Every Step … Death!
+  - Halt Miscreant!
+  - Your Allies Cannot Save You!
+  - Behold a Shield of Faith! (3 Wrath)
+  - Driving Assault (3 Wrath)
+
+Page 98: 6 abilities
+  - The Gods Punish and Defend (3 Wrath)
+  - Repent! (3 Wrath)
+  - Arrest (5 Wrath)
+  - Behold the Face of Justice! (5 Wrath)
+  - Censored (5 Wrath)
+  - Purifying Fire (5 Wrath)
+
+Page 99: 2 abilities
+  - It Is Justice You Fear (5 Wrath)
+  - Revelator (5 Wrath)
+
+Page 100: 7 abilities
+  - With My Blessing (5 Wrath)
+  - Blessing of the Faithful (5 Wrath)
+  - Sentenced (5 Wrath)
+  - Edict of Disruptive Isolation (7 Wrath)
+  - Edict of Perfect Order (7 Wrath)
+  - Edict of Purifying Pacifism (7 Wrath)
+  - Edict of Stillness (7 Wrath)
+
+Page 103: 3 abilities
+  - Righteous Judgment (9 Wrath)
+  - Shield of the Righteous (9 Wrath)
+  - Begone! (9 Wrath)
+
+Page 104: 4 abilities
+  - Burden of Evil (9 Wrath)
+  - Edict of Peace (9 Wrath)
+  - Congregation (9 Wrath)
+  - Guided to Your Side
+
+Page 105: 1 abilities
+  - Trinity of Trickery (9 Wrath)
+
+Page 106: 4 abilities
+  - Excommunication (11 Wrath)
+  - Hand of the Gods (11 Wrath)
+  - Pillar of Holy Fire (11 Wrath)
+  - Your Allies Turn on You! (11 Wrath)
+
+Page 107: 4 abilities
+  - Banish (11 Wrath)
+  - Terror Manifest (11 Wrath)
+  - Apostate (11 Wrath)
+  - Edict of Unyielding Resolve (11 Wrath)
+
+Page 113: 2 abilities
+  - Healing Grace
+  - Ray of Wrath
+
+Page 114: 4 abilities
+  - Blessed Light
+  - Drain
+  - Holy Lash
+  - Lightfall
+
+Page 115: 4 abilities
+  - Sacrificial Offer
+  - Staggering Curse
+  - Warrior’s Prayer
+  - Wither
+
+Page 116: 8 abilities
+  - Call the Thunder Down (3 Piety)
+  - Font of Wrath (3 Piety)
+  - Judgment’s Hammer (3 Piety)
+  - Violence Will Not Aid Thee (3 Piety)
+  - Corruption’s Curse (5 Piety)
+  - Curse of Terror (5 Piety)
+  - Faith Is Our Armor (5 Piety)
+  - Sermon of Grace (5 Piety)
+
+Page 117: 6 abilities
+  - Blessing of Fate and Destiny (5 Piety)
+  - Blessing of Insight (5 Piety)
+  - Divine Comedy (5 Piety)
+  - The Gods Command You Obey (5 Piety)
+  - Morning Light (5 Piety)
+  - Nature Judges Thee (5 Piety)
+
+Page 118: 10 abilities
+  - Our Hearts Your Strength (5 Piety)
+  - Reap (5 Piety)
+  - Sacred Bond (5 Piety)
+  - Saint’s Tempest (5 Piety)
+  - Statue of Power (5 Piety)
+  - Wellspring of Grace (5 Piety)
+  - Fear of the Gods (7 Piety)
+  - Saint’s Raiment (7 Piety)
+  - Soul Siphon (7 Piety)
+  - Words of Wrath and Grace (7 Piety)
+
+Page 120: 4 abilities
+  - Beacon of Grace (9 Piety)
+  - Penance (9 Piety)
+  - Sanctuary (9 Piety)
+  - Vessel of Retribution (9 Piety)
+
+Page 121: 6 abilities
+  - Blade of the Heavens (9 Piety)
+  - Blessing of the Midday Sun (9 Piety)
+  - Cuirass of the Gods (9 Piety)
+  - Gods’ Machine (9 Piety)
+  - Invocation of Mystery (9 Piety)
+  - Aura of Souls (9 Piety)
+
+Page 122: 6 abilities
+  - Invocation of Undoing (9 Piety)
+  - Lauded by God (9 Piety)
+  - Lightning Lord (9 Piety)
+  - Revitalizing Grace (9 Piety)
+  - Spirit Stampede (9 Piety)
+  - Your Story Ends Here (9 Piety)
+
+Page 123: 1 abilities
+  - Guided to Your Side
+
+Page 124: 5 abilities
+  - Trinity of Trickery (9 Piety)
+  - Arise! (11 Piety)
+  - Blessing of Steel (11 Piety)
+  - Blessing of the Blade (11 Piety)
+  - Drag the Unworthy (11 Piety)
+
+Page 125: 6 abilities
+  - Alacrity of the Heart (11 Piety)
+  - Bend Fate (11 Piety)
+  - Blessing of the Fortress (11 Piety)
+  - Divine Dragon (11 Piety)
+  - Godstorm (11 Piety)
+  - Night Falls (11 Piety)
+
+Page 126: 5 abilities
+  - Radiance of Grace (11 Piety)
+  - Righteous Phalanx (11 Piety)
+  - Solar Flare (11 Piety)
+  - Thorn Cage (11 Piety)
+  - Word of Weakening (11 Piety)
+
+Page 129: 1 abilities
+  - Hurl Element
+
+Page 130: 3 abilities
+  - Shared Void Sense
+  - Motivate Earth
+  - Return to Formlessness
+
+Page 131: 4 abilities
+  - Afflict a Bountiful Decay
+  - Bifurcated Incineration
+  - Grasp of Beyond
+  - The Green Within, the Green Without
+
+Page 132: 8 abilities
+  - Meteoric Introduction
+  - Ray of Agonizing Self-Reflection
+  - Unquiet Ground
+  - Viscous Fire
+  - Behold the Mystery (3 Essence)
+  - The Flesh, a Crucible (3 Essence)
+  - Invigorating Growth (3 Essence)
+  - Ripples in the Earth (3 Essence)
+
+Page 133: 4 abilities
+  - Conflagration (5 Essence)
+  - Instantaneous Excavation (5 Essence)
+  - No More Than a Breeze (5 Essence)
+  - Test of Rain (5 Essence)
+
+Page 135: 5 abilities
+  - There Is No Space Between
+  - O Flower Aid, O Earth Defend (5 Essence)
+  - Subvert the Green Within (5 Essence)
+  - Translated Through Flame (5 Essence)
+  - Volcano’s Embrace (5 Essence)
+
+Page 136: 6 abilities
+  - Earth Accepts Me
+  - Remember Growth and Sun and Rain
+  - Erase (7 Essence)
+  - Maw of Earth (7 Essence)
+  - Swarm of Spirits (7 Essence)
+  - Wall of Fire (7 Essence)
+
+Page 138: 4 abilities
+  - Combustion Deferred (9 Essence)
+  - Storm of Sands (9 Essence)
+  - Subverted Perception of Space (9 Essence)
+  - Web of All That’s Come Before (9 Essence)
+
+Page 139: 4 abilities
+  - Luminous Champion Aloft (9 Essence)
+  - Magma Titan (9 Essence)
+  - Meteor (9 Essence)
+  - The Wode Remembers and Returns (9 Essence)
+
+Page 141: 3 abilities
+  - Summon Source of Earth
+  - Heart of the Wode (11 Essence)
+  - Muse of Fire (11 Essence)
+
+Page 142: 6 abilities
+  - Return to Oblivion (11 Essence)
+  - World Torn Asunder (11 Essence)
+  - Earth Rejects You (11 Essence)
+  - The Green Defends Its Servants (11 Essence)
+  - Prism (11 Essence)
+  - Unquenchable Fire (11 Essence)
+
+Page 148: 8 abilities
+  - Brutal Slam
+  - Hit and Run
+  - Impaled!
+  - To the Death!
+  - Back! (3 Ferocity)
+  - Out of the Way! (3 Ferocity)
+  - Tide of Death (3 Ferocity)
+  - Your Entrails Are Your Extrails! (3 Ferocity)
+
+Page 149: 4 abilities
+  - Blood for Blood! (5 Ferocity)
+  - Thunder Roar (5 Ferocity)
+  - To the Uttermost End (5 Ferocity)
+  - Special Delivery (5 Ferocity)
+
+Page 150: 5 abilities
+  - Wrecking Ball (5 Ferocity)
+  - Death … Death! (5 Ferocity)
+  - Phalanx-Breaker (5 Ferocity)
+  - Apex Predator (5 Ferocity)
+  - Visceral Roar (5 Ferocity)
+
+Page 151: 1 abilities
+  - You Are Already Dead (7 Ferocity)
+
+Page 152: 3 abilities
+  - Debilitating Strike (9 Ferocity)
+  - Rebounding Storm (9 Ferocity)
+  - To Stone! (9 Ferocity)
+
+Page 153: 2 abilities
+  - Force of Storms (9 Ferocity)
+  - Seek and Destroy (9 Ferocity)
+
+Page 154: 2 abilities
+  - Pounce (9 Ferocity)
+  - Riders on the Storm (9 Ferocity)
+
+Page 155: 1 abilities
+  - Overkill (11 Ferocity)
+
+Page 156: 7 abilities
+  - Relentless Death (11 Ferocity)
+  - Death Comes for You All! (11 Ferocity)
+  - Primordial Vortex (11 Ferocity)
+  - Primordial Bane (11 Ferocity)
+  - Shower of Blood (11 Ferocity)
+  - Death Rattle (11 Ferocity)
+  - Deluge (11 Ferocity)
+
+Page 159: 2 abilities
+  - Bear Claws
+  - Wing Buffet
+
+Page 160: 2 abilities
+  - Driving Pounce
+  - Unbalancing Attack
+
+Page 162: 1 abilities
+  - Null Field
+
+Page 164: 5 abilities
+  - Dance of Blows
+  - Faster Than the Eye
+  - Inertial Step
+  - Joint Lock
+  - Kinetic Strike
+
+Page 165: 6 abilities
+  - Magnetic Strike
+  - Phase Inversion Strike
+  - Pressure Points
+  - Chronal Spike (3 Discipline)
+  - Psychic Pulse (3 Discipline)
+  - Relentless Nemesis (3 Discipline)
+
+Page 166: 5 abilities
+  - Stunning Blow (3 Discipline)
+  - Arcane Disruptor (5 Discipline)
+  - Impart Force (5 Discipline)
+  - Phase Strike (5 Discipline)
+  - A Squad Unto Myself (5 Discipline)
+
+Page 167: 3 abilities
+  - Force Redirected (5 Discipline)
+  - Entropic Field (5 Discipline)
+  - Gravitic Strike (5 Discipline)
+
+Page 169: 2 abilities
+  - Iron Grip (9 Discipline)
+  - Synaptic Reset (9 Discipline)
+
+Page 170: 3 abilities
+  - Phase Step (9 Discipline)
+  - Ice Pillars (9 Discipline)
+  - Wall of Ice (9 Discipline)
+
+Page 172: 3 abilities
+  - Arcane Purge (11 Discipline)
+  - Phase Hurl (11 Discipline)
+  - Scalar Assault (11 Discipline)
+
+Page 173: 2 abilities
+  - Heat Drain (11 Discipline)
+  - Realitas (11 Discipline)
+
+Page 178: 5 abilities
+  - Gasping in Pain
+  - I Work Better Alone
+  - Teamwork Has Its Place
+  - You Were Watching the Wrong One
+  - Disorienting Strike (3 Insight)
+
+Page 179: 7 abilities
+  - Eviscerate (3 Insight)
+  - Get In Get Out (3 Insight)
+  - Two Throats at Once (3 Insight)
+  - Coup de Grace (5 Insight)
+  - One Hundred Throats (5 Insight)
+  - Setup (5 Insight)
+  - Shadowstrike (5 Insight)
+
+Page 180: 2 abilities
+  - In a Puff of Ash (5 Insight)
+  - Machinations of Sound (5 Insight)
+
+Page 181: 3 abilities
+  - Misdirecting Strike (7 Insight)
+  - Pinning Shot (7 Insight)
+  - Staggering Blow (7 Insight)
+
+Page 183: 4 abilities
+  - Blackout (9 Insight)
+  - Into the Shadows (9 Insight)
+  - Shadowfall (9 Insight)
+  - You Talk Too Much (9 Insight)
+
+Page 184: 3 abilities
+  - Black Ash Eruption (9 Insight)
+  - Look! (9 Insight)
+  - Puppet Strings (9 Insight)
+
+Page 185: 1 abilities
+  - Time Bomb
+
+Page 186: 3 abilities
+  - Assassinate (11 Insight)
+  - Shadowgrasp (11 Insight)
+  - They Always Line Up (11 Insight)
+
+Page 187: 5 abilities
+  - Cacophony of Cinders (11 Insight)
+  - Demon Door (11 Insight)
+  - To the Stars (11 Insight)
+  - I Am You (11 Insight)
+  - It Was Me All Along (11 Insight)
+
+Page 193: 4 abilities
+  - Concussive Strike (3 Focus)
+  - Inspiring Strike (3 Focus)
+  - Hammer and Anvil (5 Focus)
+  - Mind Game (5 Focus)
+
+Page 194: 2 abilities
+  - Try Me Instead (5 Focus)
+  - I’ve Got Your Back (5 Focus)
+
+Page 196: 1 abilities
+  - Squad! Gear Check! (9 Focus)
+
+Page 197: 1 abilities
+  - Panic in Their Lines (9 Focus)
+
+Page 198: 1 abilities
+  - To Me Squad! (9 Focus)
+
+Page 199: 1 abilities
+  - I’ll Open and You’ll Close (11 Focus)
+
+Page 200: 3 abilities
+  - Their Lack of Focus Is Their Undoing (11 Focus)
+  - No Escape (11 Focus)
+  - That One Is Mine! (11 Focus)
+
+Page 203: 1 abilities
+  - Mind Spike
+
+Page 204: 5 abilities
+  - Accelerate
+  - Minor Telekinesis
+  - Remote Assistance
+  - Entropic Bolt
+  - Hoarfrost
+
+Page 205: 6 abilities
+  - Incinerate
+  - Kinetic Grip
+  - Kinetic Pulse
+  - Materialize
+  - Optic Blast
+  - Spirit Sword
+
+Page 206: 8 abilities
+  - Awe (3 Clarity)
+  - Choke (3 Clarity)
+  - Precognition (3 Clarity)
+  - Smolder (3 Clarity)
+  - Flashback (5 Clarity)
+  - Inertia Soak (5 Clarity)
+  - Iron (5 Clarity)
+  - Perfect Clarity (5 Clarity)
+
+Page 207: 5 abilities
+  - Applied Chronometrics (5 Clarity)
+  - Slow (5 Clarity)
+  - Gravitic Burst (5 Clarity)
+  - Levity and Gravity (5 Clarity)
+  - Overwhelm (5 Clarity)
+
+Page 208: 5 abilities
+  - Synaptic Override (5 Clarity)
+  - Fling Through Time (7 Clarity)
+  - Force Orbs (7 Clarity)
+  - Reflector Field (7 Clarity)
+  - Soul Burn (7 Clarity)
+
+Page 210: 4 abilities
+  - Exothermic Shield (9 Clarity)
+  - Hypersonic (9 Clarity)
+  - Mind Snare (9 Clarity)
+  - Soulbound (9 Clarity)
+
+Page 211: 2 abilities
+  - Fate (9 Clarity)
+  - Stasis Field (9 Clarity)
+
+Page 212: 4 abilities
+  - Gravitic Well (9 Clarity)
+  - Greater Kinetic Grip (9 Clarity)
+  - Synaptic Conditioning (9 Clarity)
+  - Synaptic Dissipation (9 Clarity)
+
+Page 213: 1 abilities
+  - Levitation Field
+
+Page 214: 4 abilities
+  - Doubt (11 Clarity)
+  - Mindwipe (11 Clarity)
+  - Rejuvenate (11 Clarity)
+  - Steel (11 Clarity)
+
+Page 215: 5 abilities
+  - Acceleration Field (11 Clarity)
+  - Borrow From the Future (11 Clarity)
+  - Fulcrum (11 Clarity)
+  - Gravitic Nova (11 Clarity)
+  - Resonant Mind Spike (11 Clarity)
+
+Page 216: 1 abilities
+  - Synaptic Terror (11 Clarity)
+
+Page 219: 2 abilities
+  - Choreography
+  - Revitalizing Limerick
+
+Page 220: 6 abilities
+  - Acrobatics
+  - Blocking
+  - Dramatic Monologue
+  - Power Chord
+  - “Thunder Mother”
+  - “Ballad of the Beast”
+
+Page 221: 4 abilities
+  - Artful Flourish
+  - Cutting Sarcasm
+  - Instigator
+  - Witty Banter
+
+Page 222: 7 abilities
+  - Harsh Critic (3 Drama)
+  - Hypnotic Overtones (3 Drama)
+  - Quick Rewrite (3 Drama)
+  - Upstage (3 Drama)
+  - Dramatic Reversal (5 Drama)
+  - Flip the Script (5 Drama)
+  - Method Acting (5 Drama)
+
+Page 223: 4 abilities
+  - Guest Star (5 Drama)
+  - Twist at the End (5 Drama)
+  - Classic Chandelier Stunt (5 Drama)
+  - En Garde! (5 Drama)
+
+Page 224: 6 abilities
+  - Encore (5 Drama)
+  - Tough Crowd (5 Drama)
+  - “Fire Up the Night”
+  - “Never-Ending Hero”
+  - Extensive Rewrites (7 Drama)
+  - Infernal Gavotte (7 Drama)
+
+Page 225: 2 abilities
+  - Star Solo (7 Drama)
+  - We Meet at Last (7 Drama)
+
+Page 226: 6 abilities
+  - Take Two!
+  - We Can’t Be Upstaged!
+  - Action Hero (9 Drama)
+  - Continuity Error (9 Drama)
+  - Love Song (9 Drama)
+  - Patter Song (9 Drama)
+
+Page 227: 7 abilities
+  - Spotlight
+  - Here’s How Your Story Ends (9 Drama)
+  - You’re All My Understudies (9 Drama)
+  - Blood on the Stage (9 Drama)
+  - Fight Choreography (9 Drama)
+  - Feedback (9 Drama)
+  - Legendary Drum Fill (9 Drama)
+
+Page 228: 4 abilities
+  - Moonlight Sonata
+  - Radical Fantasia
+  - Power Ballad (11 Drama)
+  - The Show Must Go On (11 Drama)
+
+Page 229: 6 abilities
+  - Epic (11 Drama)
+  - Rising Tension (11 Drama)
+  - Expert Fencer (11 Drama)
+  - Renegotiated Contract (11 Drama)
+  - Jam Session (11 Drama)
+  - Melt Their Faces (11 Drama)
+
+Page 234: 3 abilities
+  - Exploding Arrow
+  - Unmooring
+  - Fade
+
+Page 235: 4 abilities
+  - Double Strike
+  - Forward Thrust, Backward Smash
+  - Battle Grace
+  - Pain for Pain
+
+Page 236: 4 abilities
+  - Devastating Rush
+  - Let’s Dance
+  - Shock and Awe
+  - Hamstring Shot
+
+Page 237: 3 abilities
+  - Two Shot
+  - Net and Stab
+  - Protective Attack
+
+Page 238: 4 abilities
+  - Patient Shot
+  - Leaping Lightning
+  - Where I Want You
+  - Fancy Footwork
+
+Page 239: 3 abilities
+  - Shield Bash
+  - Weakening Brand
+  - Extension of My Arm
+
+Page 246: 2 abilities
+  - Invisible Force
+  - Psychic Whisper
+
+Page 255: 1 abilities
+  - Share Head
+
+Page 256: 1 abilities
+  - Stone Eyes
+
+Page 257: 1 abilities
+  - Psychic Blast (Special Heroic Resource Cost)
+
+Page 258: 1 abilities
+  - Telekinetic Grasp
+
+Page 261: 2 abilities
+  - Posthumous Retirement
+  - Rogue Wave
+
+Page 288: 2 abilities
+  - Grab
+  - Knockback
+
+Page 290: 2 abilities
+  - Melee Weapon Free Strike
+  - Ranged Weapon Free Strike
+
+Page 313: 1 abilities
+  - Dragon’s Fire
+
+Page 317: 1 abilities
+  - Nova
+
+Page 340: 1 abilities
+  - Hallucination Field
+
+Page 341: 1 abilities
+  - Nullring Strike
+
+Page 356: 1 abilities
+  - Come Out to Play (1 Heroic Resource)
+
+Page 357: 1 abilities
+  - Holy Terror (3 Heroic Resource)
+
+Page 358: 1 abilities
+  - Showstopper (5 Heroic Resource)
+
+Page 359: 1 abilities
+  - The Harder They Fall (7 Heroic Resource)
+
+Page 360: 1 abilities
+  - Knightly Challenge (5 Heroic Resource)
+
+Page 362: 1 abilities
+  - The Devil’s Chord (9 Heroic Resource)
+
