@@ -2,8 +2,8 @@ DRAW STEEL ABILITIES - FILTERED RESULTS
 Pages 1-75
 ================================================================================
 
-Total Valid Abilities: 423
-Pages with Abilities: 123
+Total Valid Abilities: 450
+Pages with Abilities: 127
 
 ================================================================================
 BY PAGE
@@ -28,8 +28,9 @@ Page 65: 3 abilities
   - Psionic Bolt
   - Minor Acceleration
 
-Page 95: 1 abilities
+Page 95: 2 abilities
   - Judgment
+  - My Life for Yours
 
 Page 97: 6 abilities
   - Back Blasphemer!
@@ -51,7 +52,8 @@ Page 99: 2 abilities
   - It Is Justice You Fear (5 Wrath)
   - Revelator (5 Wrath)
 
-Page 100: 7 abilities
+Page 100: 8 abilities
+  - Prescient Grace (5 Wrath)
   - With My Blessing (5 Wrath)
   - Blessing of the Faithful (5 Wrath)
   - Sentenced (5 Wrath)
@@ -60,15 +62,17 @@ Page 100: 7 abilities
   - Edict of Purifying Pacifism (7 Wrath)
   - Edict of Stillness (7 Wrath)
 
-Page 103: 3 abilities
+Page 103: 4 abilities
   - Righteous Judgment (9 Wrath)
   - Shield of the Righteous (9 Wrath)
   - Begone! (9 Wrath)
+  - Pain of Your Own Making (9 Wrath)
 
-Page 104: 4 abilities
+Page 104: 5 abilities
   - Burden of Evil (9 Wrath)
   - Edict of Peace (9 Wrath)
   - Congregation (9 Wrath)
+  - Intercede (9 Wrath)
   - Guided to Your Side
 
 Page 105: 1 abilities
@@ -80,15 +84,19 @@ Page 106: 4 abilities
   - Pillar of Holy Fire (11 Wrath)
   - Your Allies Turn on You! (11 Wrath)
 
-Page 107: 4 abilities
+Page 107: 6 abilities
   - Banish (11 Wrath)
   - Terror Manifest (11 Wrath)
+  - Blessing and a Curse (11 Wrath)
+  - Fulfill Your Destiny (11 Wrath)
   - Apostate (11 Wrath)
   - Edict of Unyielding Resolve (11 Wrath)
 
-Page 113: 2 abilities
+Page 113: 4 abilities
   - Healing Grace
   - Ray of Wrath
+  - Word of Guidance
+  - Word of Judgment
 
 Page 114: 4 abilities
   - Blessed Light
@@ -172,17 +180,22 @@ Page 125: 6 abilities
   - Godstorm (11 Piety)
   - Night Falls (11 Piety)
 
-Page 126: 5 abilities
+Page 126: 6 abilities
   - Radiance of Grace (11 Piety)
   - Righteous Phalanx (11 Piety)
   - Solar Flare (11 Piety)
   - Thorn Cage (11 Piety)
+  - Word of Final Redemption (11 Piety)
   - Word of Weakening (11 Piety)
 
 Page 129: 1 abilities
   - Hurl Element
 
-Page 130: 3 abilities
+Page 130: 7 abilities
+  - Breath of Dawn Remembered
+  - Explosive Assistance
+  - Skin Like Castle Walls
+  - Subtle Relocation
   - Shared Void Sense
   - Motivate Earth
   - Return to Formlessness
@@ -249,6 +262,9 @@ Page 142: 6 abilities
   - Prism (11 Essence)
   - Unquenchable Fire (11 Essence)
 
+Page 147: 1 abilities
+  - Lines of Force
+
 Page 148: 8 abilities
   - Brutal Slam
   - Hit and Run
@@ -275,13 +291,15 @@ Page 150: 5 abilities
 Page 151: 1 abilities
   - You Are Already Dead (7 Ferocity)
 
-Page 152: 3 abilities
+Page 152: 4 abilities
   - Debilitating Strike (9 Ferocity)
+  - My Turn! (9 Ferocity)
   - Rebounding Storm (9 Ferocity)
   - To Stone! (9 Ferocity)
 
-Page 153: 2 abilities
+Page 153: 3 abilities
   - Force of Storms (9 Ferocity)
+  - Death Strike (9 Ferocity)
   - Seek and Destroy (9 Ferocity)
 
 Page 154: 2 abilities
@@ -338,7 +356,8 @@ Page 167: 3 abilities
   - Entropic Field (5 Discipline)
   - Gravitic Strike (5 Discipline)
 
-Page 169: 2 abilities
+Page 169: 3 abilities
+  - Anticipating Strike (9 Discipline)
   - Iron Grip (9 Discipline)
   - Synaptic Reset (9 Discipline)
 
@@ -352,7 +371,8 @@ Page 172: 3 abilities
   - Phase Hurl (11 Discipline)
   - Scalar Assault (11 Discipline)
 
-Page 173: 2 abilities
+Page 173: 3 abilities
+  - Arrestor Cycle (11 Discipline)
   - Heat Drain (11 Discipline)
   - Realitas (11 Discipline)
 
@@ -381,6 +401,9 @@ Page 181: 3 abilities
   - Pinning Shot (7 Insight)
   - Staggering Blow (7 Insight)
 
+Page 182: 1 abilities
+  - Night Watch
+
 Page 183: 4 abilities
   - Blackout (9 Insight)
   - Into the Shadows (9 Insight)
@@ -407,6 +430,9 @@ Page 187: 5 abilities
   - I Am You (11 Insight)
   - It Was Me All Along (11 Insight)
 
+Page 191: 1 abilities
+  - Parry
+
 Page 193: 4 abilities
   - Concussive Strike (3 Focus)
   - Inspiring Strike (3 Focus)
@@ -417,11 +443,15 @@ Page 194: 2 abilities
   - Try Me Instead (5 Focus)
   - I’ve Got Your Back (5 Focus)
 
+Page 195: 1 abilities
+  - No Dying on My Watch (5 Focus)
+
 Page 196: 1 abilities
   - Squad! Gear Check! (9 Focus)
 
-Page 197: 1 abilities
+Page 197: 2 abilities
   - Panic in Their Lines (9 Focus)
+  - Instant Retaliation (9 Focus)
 
 Page 198: 1 abilities
   - To Me Squad! (9 Focus)
@@ -437,10 +467,13 @@ Page 200: 3 abilities
 Page 203: 1 abilities
   - Mind Spike
 
-Page 204: 5 abilities
+Page 204: 8 abilities
   - Accelerate
+  - Again
+  - Feedback Loop
   - Minor Telekinesis
   - Remote Assistance
+  - Repel
   - Entropic Bolt
   - Hoarfrost
 
@@ -495,7 +528,8 @@ Page 212: 4 abilities
 Page 213: 1 abilities
   - Levitation Field
 
-Page 214: 4 abilities
+Page 214: 5 abilities
+  - Stasis Shield (3 Clarity)
   - Doubt (11 Clarity)
   - Mindwipe (11 Clarity)
   - Rejuvenate (11 Clarity)
@@ -651,7 +685,8 @@ Page 290: 2 abilities
 Page 313: 1 abilities
   - Dragon’s Fire
 
-Page 317: 1 abilities
+Page 317: 2 abilities
+  - Stop Right There
   - Nova
 
 Page 340: 1 abilities

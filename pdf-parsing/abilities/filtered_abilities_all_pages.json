@@ -357,6 +357,37 @@
     "page": 95
   },
   {
+    "name": "My Life for Yours",
+    "metadata": {
+      "keywords": [
+        "Magic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "Self or one ally",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Magic, Ranged",
+        "Triggered",
+        "e Ranged 10",
+        "x Self or one ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target starts their turn or takes damage.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target starts their turn or takes damage.",
+        "Effect: You spend a Recovery and the target regains Stamina equal to",
+        "your recovery value."
+      ]
+    },
+    "page": 95
+  },
+  {
     "name": "Back Blasphemer!",
     "metadata": {
       "keywords": [
@@ -827,6 +858,38 @@
     "page": 99
   },
   {
+    "name": "Prescient Grace (5 Wrath)",
+    "metadata": {
+      "keywords": [
+        "Magic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "Self or one ally",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Magic, Ranged",
+        "Triggered",
+        "e Ranged 10",
+        "x Self or one ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: An enemy within 10 squares starts their turn.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: An enemy within 10 squares starts their turn.",
+        "Effect: You can spend a Recovery to allow the target to regain",
+        "Stamina equal to your recovery value. The target can then take their",
+        "turn immediately before the triggering enemy."
+      ]
+    },
+    "page": 100
+  },
+  {
     "name": "With My Blessing (5 Wrath)",
     "metadata": {
       "keywords": [
@@ -1148,6 +1211,36 @@
     "page": 103
   },
   {
+    "name": "Pain of Your Own Making (9 Wrath)",
+    "metadata": {
+      "keywords": [
+        "Magic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "Self or one ally",
+      "trigger": "Free triggered",
+      "cost": null,
+      "raw_lines": [
+        "Magic, Ranged",
+        "Free triggered",
+        "e Ranged 10",
+        "x Self or one ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target gains a condition or effect that is ended by a",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target gains a condition or effect that is ended by a",
+        "saving throw or that ends at the end of their turn."
+      ]
+    },
+    "page": 103
+  },
+  {
     "name": "Burden of Evil (9 Wrath)",
     "metadata": {
       "keywords": [
@@ -1239,6 +1332,38 @@
       "raw_lines": [
         "Power Roll + Might:",
         "á \t 8 + M damage; as a free triggered action, one ally within 10"
+      ]
+    },
+    "page": 104
+  },
+  {
+    "name": "Intercede (9 Wrath)",
+    "metadata": {
+      "keywords": [
+        "Magic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "One ally",
+      "trigger": "Free triggered",
+      "cost": null,
+      "raw_lines": [
+        "Magic, Ranged",
+        "Free triggered",
+        "e Ranged 10",
+        "x One ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: A creature makes a strike against the target.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: A creature makes a strike against the target.",
+        "Effect: The target is unaffected by the strike and you become the",
+        "target instead, even if you aren’t a valid target for it. You take half the",
+        "damage from the strike, and the target gains 3 surges."
       ]
     },
     "page": 104
@@ -1509,6 +1634,72 @@
     "page": 107
   },
   {
+    "name": "Blessing and a Curse (11 Wrath)",
+    "metadata": {
+      "keywords": [
+        "Magic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "One creature",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Magic, Ranged",
+        "Triggered",
+        "e Ranged 10",
+        "x One creature"
+      ]
+    },
+    "effect": {
+      "description": "roll (your choice). You can then choose another target within dis­",
+      "power_roll": "tance, who obtains the opposite outcome on their next power roll.",
+      "tiers": {
+        "tier1": "Effect: The target obtains a tier 1 or tier 3 outcome on their power"
+      },
+      "raw_lines": [
+        "Trigger: The target makes a power roll.",
+        "Effect: The target obtains a tier 1 or tier 3 outcome on their power",
+        "roll (your choice). You can then choose another target within dis­",
+        "tance, who obtains the opposite outcome on their next power roll."
+      ]
+    },
+    "page": 107
+  },
+  {
+    "name": "Fulfill Your Destiny (11 Wrath)",
+    "metadata": {
+      "keywords": [
+        "Magic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "One ally",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Magic, Ranged",
+        "Triggered",
+        "e Ranged 10",
+        "x One ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: You or another hero ends their turn.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: You or another hero ends their turn.",
+        "Effect: The target takes their turn after the triggering hero, and im­",
+        "mediately removes all conditions and negative effects on themself.",
+        "During their turn, the target has a double edge on poºwer rolls."
+      ]
+    },
+    "page": 107
+  },
+  {
     "name": "Apostate (11 Wrath)",
     "metadata": {
       "keywords": [
@@ -1631,6 +1822,67 @@
         "á \t 2 + I damage",
         "é \t 4 + I damage",
         "í \t 6 + I damage"
+      ]
+    },
+    "page": 113
+  },
+  {
+    "name": "Word of Guidance",
+    "metadata": {
+      "keywords": [
+        "Magic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "One ally",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Magic, Ranged",
+        "Triggered",
+        "e Ranged 10",
+        "x One ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target makes an ability roll for a damage-dealing ability.",
+      "power_roll": "Spend 1 Piety: The power roll has a double edge.",
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target makes an ability roll for a damage-dealing ability.",
+        "Effect: The power roll gains an edge.",
+        "Spend 1 Piety: The power roll has a double edge."
+      ]
+    },
+    "page": 113
+  },
+  {
+    "name": "Word of Judgment",
+    "metadata": {
+      "keywords": [
+        "Magic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "One ally",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Magic, Ranged",
+        "Triggered",
+        "e Ranged 10",
+        "x One ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target would take damage from an ability that uses a",
+      "power_roll": "power roll.",
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target would take damage from an ability that uses a",
+        "power roll."
       ]
     },
     "page": 113
@@ -3692,6 +3944,41 @@
     "page": 126
   },
   {
+    "name": "Word of Final Redemption (11 Piety)",
+    "metadata": {
+      "keywords": [
+        "Magic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "One creature",
+      "trigger": "Free triggered",
+      "cost": null,
+      "raw_lines": [
+        "Magic, Ranged",
+        "Free triggered",
+        "e Ranged 10",
+        "x One creature"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target dies.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target dies.",
+        "Effect: Before the target dies, you can look at their stat block and",
+        "force them to use one ability that is a main action or a maneuver. If",
+        "the ability costs a Heroic Resource or Malice, the creature can use",
+        "it without any cost. For the purpose of using this ability, your allies",
+        "and enemies are the target’s allies and enemies, and you decide who",
+        "the ability targets."
+      ]
+    },
+    "page": 126
+  },
+  {
     "name": "Word of Weakening (11 Piety)",
     "metadata": {
       "keywords": [
@@ -3755,6 +4042,137 @@
       ]
     },
     "page": 129
+  },
+  {
+    "name": "Breath of Dawn Remembered",
+    "metadata": {
+      "keywords": [
+        "Green",
+        "Magic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "Self or one ally",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Green, Magic, Ranged",
+        "Triggered",
+        "e Ranged 10",
+        "x Self or one ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target starts their turn or takes damage.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target starts their turn or takes damage.",
+        "Effect: The target can spend a Recovery.",
+        "Spend 1+ Essence: The target can spend an additional Recovery for",
+        "each essence spent."
+      ]
+    },
+    "page": 130
+  },
+  {
+    "name": "Explosive Assistance",
+    "metadata": {
+      "keywords": [
+        "Fire",
+        "Magic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "Self or one ally",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Fire, Magic, Ranged",
+        "Triggered",
+        "e Ranged 10",
+        "x Self or one ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target force moves a creature or object.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target force moves a creature or object.",
+        "Effect: The forced movement distance gains a bonus equal to your",
+        "Reason score."
+      ]
+    },
+    "page": 130
+  },
+  {
+    "name": "Skin Like Castle Walls",
+    "metadata": {
+      "keywords": [
+        "Earth",
+        "Magic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "Self or one ally",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Earth, Magic, Ranged",
+        "Triggered",
+        "e Ranged 10",
+        "x Self or one ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target takes damage.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target takes damage.",
+        "Effect: The target takes half the damage.",
+        "Spend 1 Essence: If the damage has any potency effects associated",
+        "with it, the potency is reduced by 1 for the target."
+      ]
+    },
+    "page": 130
+  },
+  {
+    "name": "Subtle Relocation",
+    "metadata": {
+      "keywords": [
+        "Magic",
+        "Ranged",
+        "Void"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "Self or one ally",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Magic, Ranged, Void",
+        "Triggered",
+        "e Ranged 10",
+        "x Self or one ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target starts their turn, moves, or is force moved.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target starts their turn, moves, or is force moved.",
+        "Effect: You teleport the target up to a number of squares equal to",
+        "your Reason score. If the target moves to trigger this ability, you can",
+        "teleport them at any point during the move."
+      ]
+    },
+    "page": 130
   },
   {
     "name": "Shared Void Sense",
@@ -5355,6 +5773,41 @@
     "page": 142
   },
   {
+    "name": "Lines of Force",
+    "metadata": {
+      "keywords": [
+        "Magic",
+        "Melee"
+      ],
+      "action_type": null,
+      "range": "Melee 1",
+      "target": "Self or one creature",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Magic, Melee",
+        "Triggered",
+        "e Melee 1",
+        "x Self or one creature"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target would be force moved.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target would be force moved.",
+        "Effect: You can select a new target of the same size or smaller within",
+        "distance to be force moved instead. You become the source of the",
+        "forced movement, determine the new target’s destination, and can",
+        "push the target instead of using the original forced movement type.",
+        "Additionally, the forced movement distance gains a bonus equal to",
+        "your Might score."
+      ]
+    },
+    "page": 147
+  },
+  {
     "name": "Brutal Slam",
     "metadata": {
       "keywords": [
@@ -5978,6 +6431,37 @@
     "page": 152
   },
   {
+    "name": "My Turn! (9 Ferocity)",
+    "metadata": {
+      "keywords": [
+        "Melee",
+        "Strike",
+        "Weapon"
+      ],
+      "action_type": null,
+      "range": "Melee 1",
+      "target": "The triggering creature",
+      "trigger": "Free triggered",
+      "cost": null,
+      "raw_lines": [
+        "Melee, Strike, Weapon",
+        "Free triggered",
+        "e Melee 1",
+        "x The triggering creature"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: A creature causes you to be winded or dying, or damages",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: A creature causes you to be winded or dying, or damages",
+        "you while you are winded or dying."
+      ]
+    },
+    "page": 152
+  },
+  {
     "name": "Rebounding Storm (9 Ferocity)",
     "metadata": {
       "keywords": [
@@ -6073,6 +6557,38 @@
         "á \t 7 + M damage; push 3",
         "é \t 11 + M damage; push 5",
         "í \t 16 + M damage; push 7"
+      ]
+    },
+    "page": 153
+  },
+  {
+    "name": "Death Strike (9 Ferocity)",
+    "metadata": {
+      "keywords": [
+        "Melee",
+        "Strike",
+        "Weapon"
+      ],
+      "action_type": null,
+      "range": "Melee 1",
+      "target": "Self",
+      "trigger": "Free triggered",
+      "cost": null,
+      "raw_lines": [
+        "Melee, Strike, Weapon",
+        "Free triggered",
+        "e Melee 1",
+        "x Self"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: You reduce a creature to 0 Stamina with a strike.",
+      "power_roll": "using the same power roll as the triggering strike.",
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: You reduce a creature to 0 Stamina with a strike.",
+        "Effect: You target a creature adjacent to you with the same strike,",
+        "using the same power roll as the triggering strike."
       ]
     },
     "page": 153
@@ -7260,6 +7776,37 @@
     "page": 167
   },
   {
+    "name": "Anticipating Strike (9 Discipline)",
+    "metadata": {
+      "keywords": [
+        "Melee",
+        "Psionic",
+        "Strike",
+        "Weapon"
+      ],
+      "action_type": null,
+      "range": "Melee 1",
+      "target": "One creature",
+      "trigger": "Free triggered",
+      "cost": null,
+      "raw_lines": [
+        "Melee, Psionic, Strike, Weapon",
+        "Free triggered",
+        "e Melee 1",
+        "x One creature"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target moves or uses a main action.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target moves or uses a main action."
+      ]
+    },
+    "page": 169
+  },
+  {
     "name": "Iron Grip (9 Discipline)",
     "metadata": {
       "keywords": [
@@ -7523,6 +8070,35 @@
       ]
     },
     "page": 172
+  },
+  {
+    "name": "Arrestor Cycle (11 Discipline)",
+    "metadata": {
+      "keywords": [
+        "Psionic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "One creature",
+      "trigger": "Free triggered",
+      "cost": null,
+      "raw_lines": [
+        "Psionic, Ranged",
+        "Free triggered",
+        "e Ranged 10",
+        "x One creature"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The triggering creature starts their turn.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The triggering creature starts their turn."
+      ]
+    },
+    "page": 173
   },
   {
     "name": "Heat Drain (11 Discipline)",
@@ -8213,6 +8789,36 @@
     "page": 181
   },
   {
+    "name": "Night Watch",
+    "metadata": {
+      "keywords": [
+        "Ranged",
+        "Weapon"
+      ],
+      "action_type": null,
+      "range": "Ranged 5",
+      "target": "One ally",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Ranged, Weapon",
+        "Triggered",
+        "e Ranged 5",
+        "x One ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target takes damage from another creature’s ability",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target takes damage from another creature’s ability",
+        "while you are hidden."
+      ]
+    },
+    "page": 182
+  },
+  {
     "name": "Blackout (9 Insight)",
     "metadata": {
       "keywords": [
@@ -8771,6 +9377,39 @@
     "page": 187
   },
   {
+    "name": "Parry",
+    "metadata": {
+      "keywords": [
+        "Melee",
+        "Weapon"
+      ],
+      "action_type": null,
+      "range": "Melee 2",
+      "target": "Self or one ally",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Melee, Weapon",
+        "Triggered",
+        "e Melee 2",
+        "x Self or one ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: A creature deals damage to the target.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: A creature deals damage to the target.",
+        "Effect: You can shift 1 square. If the target is you, or if you end this",
+        "shift adjacent to the target, the target takes half the damage. If the",
+        "damage has any potency effect associated with it, the potency is",
+        "decreased by 1."
+      ]
+    },
+    "page": 191
+  },
+  {
     "name": "Concussive Strike (3 Focus)",
     "metadata": {
       "keywords": [
@@ -8987,6 +9626,41 @@
     "page": 194
   },
   {
+    "name": "No Dying on My Watch (5 Focus)",
+    "metadata": {
+      "keywords": [
+        "Ranged",
+        "Strike",
+        "Weapon"
+      ],
+      "action_type": null,
+      "range": "Ranged 5",
+      "target": "One enemy",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Ranged, Strike, Weapon",
+        "Triggered",
+        "e Ranged 5",
+        "x One enemy"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target deals damage to an ally.",
+      "power_roll": "to during the move. You then make a power roll against the target.",
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target deals damage to an ally.",
+        "Effect: You move up to your speed toward the triggering ally, ending",
+        "this movement adjacent to them or in the nearest square if you can’t",
+        "reach an adjacent square. The triggering ally can spend a Recovery",
+        "and gains 5 temporary Stamina for each enemy you came adjacent",
+        "to during the move. You then make a power roll against the target."
+      ]
+    },
+    "page": 195
+  },
+  {
     "name": "Squad! Gear Check! (9 Focus)",
     "metadata": {
       "keywords": [
@@ -9057,6 +9731,37 @@
         "á\t  6 + M damage; slide 1",
         "é\t  9 + M damage; slide 3",
         "í\t  13 + M damage; slide 5"
+      ]
+    },
+    "page": 197
+  },
+  {
+    "name": "Instant Retaliation (9 Focus)",
+    "metadata": {
+      "keywords": [
+        "Melee",
+        "Weapon"
+      ],
+      "action_type": null,
+      "range": "Melee 1",
+      "target": "One ally",
+      "trigger": "Free triggered",
+      "cost": null,
+      "raw_lines": [
+        "Melee, Weapon",
+        "Free triggered",
+        "e Melee 1",
+        "x One ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: A creature deals damage to the target.",
+      "power_roll": "Effect: The target takes half the damage. You then make a power roll",
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: A creature deals damage to the target.",
+        "Effect: The target takes half the damage. You then make a power roll",
+        "against the triggering creature."
       ]
     },
     "page": 197
@@ -9313,6 +10018,68 @@
     "page": 204
   },
   {
+    "name": "Again",
+    "metadata": {
+      "keywords": [
+        "Psionic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "Self or one creature",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Psionic, Ranged",
+        "Triggered",
+        "e Ranged 10",
+        "x Self or one creature"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target makes an ability roll.",
+      "power_roll": "roll. The target must reroll the power roll and use the new roll.",
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target makes an ability roll.",
+        "Effect: You can use this ability after seeing the result of the triggering",
+        "roll. The target must reroll the power roll and use the new roll."
+      ]
+    },
+    "page": 204
+  },
+  {
+    "name": "Feedback Loop",
+    "metadata": {
+      "keywords": [
+        "Psionic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "One creature",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Psionic, Ranged",
+        "Triggered",
+        "e Ranged 10",
+        "x One creature"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target deals damage to an ally.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target deals damage to an ally.",
+        "Effect: The target takes psychic damage equal to half the triggering",
+        "damage."
+      ]
+    },
+    "page": 204
+  },
+  {
     "name": "Minor Telekinesis",
     "metadata": {
       "keywords": [
@@ -9368,6 +10135,41 @@
       "raw_lines": [
         "Effect: The next ability roll an ally makes against the target before",
         "the start of your next turn gains an edge."
+      ]
+    },
+    "page": 204
+  },
+  {
+    "name": "Repel",
+    "metadata": {
+      "keywords": [
+        "Psionic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "Self or one ally",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Psionic, Ranged",
+        "Triggered",
+        "e Ranged 10",
+        "x Self or one ally"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target takes damage or is force moved.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target takes damage or is force moved.",
+        "Effect: The target takes half the triggering damage, or the distance of",
+        "the triggering forced movement is reduced by a number of squares",
+        "equal to your Reason score. If the target took damage and was force",
+        "moved, you choose the effect. If the forced movement is reduced to",
+        "0 squares, the target can push the source of the forced movement a",
+        "number of squares equal to your Reason score."
       ]
     },
     "page": 204
@@ -10684,6 +11486,38 @@
       ]
     },
     "page": 213
+  },
+  {
+    "name": "Stasis Shield (3 Clarity)",
+    "metadata": {
+      "keywords": [
+        "Psionic",
+        "Ranged"
+      ],
+      "action_type": null,
+      "range": "Ranged 10",
+      "target": "Self, or one creature or object",
+      "trigger": "Triggered",
+      "cost": null,
+      "raw_lines": [
+        "Psionic, Ranged",
+        "Triggered",
+        "e Ranged 10",
+        "x Self, or one creature or object"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target takes damage.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target takes damage.",
+        "Effect: The target is teleported to an unoccupied space adjacent to",
+        "you, taking no damage and suffering no additional effects if this",
+        "movement would get them out of harm’s way."
+      ]
+    },
+    "page": 214
   },
   {
     "name": "Doubt (11 Clarity)",
@@ -14126,6 +14960,37 @@
       ]
     },
     "page": 313
+  },
+  {
+    "name": "Stop Right There",
+    "metadata": {
+      "keywords": [
+        "Melee",
+        "Strike",
+        "Weapon"
+      ],
+      "action_type": null,
+      "range": "Melee 1",
+      "target": "One enemy",
+      "trigger": "Free triggered",
+      "cost": null,
+      "raw_lines": [
+        "Melee, Strike, Weapon",
+        "Free triggered",
+        "e  Melee 1",
+        "x One enemy"
+      ]
+    },
+    "effect": {
+      "description": "Trigger: The target willingly moves adjacent to you.",
+      "power_roll": null,
+      "tiers": {},
+      "raw_lines": [
+        "Trigger: The target willingly moves adjacent to you.",
+        "Effect: The target takes 5 damage."
+      ]
+    },
+    "page": 317
   },
   {
     "name": "Nova",

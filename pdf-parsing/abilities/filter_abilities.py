@@ -29,8 +29,8 @@ def is_valid_ability(ability: dict) -> bool:
         if len(keyword) > 30:  # Too long to be a keyword
             return False
     
-    # Must have action type
-    if not metadata.get('action_type'):
+    # Must have action type OR trigger (for triggered abilities)
+    if not metadata.get('action_type') and not metadata.get('trigger'):
         return False
     
     # Must have range
