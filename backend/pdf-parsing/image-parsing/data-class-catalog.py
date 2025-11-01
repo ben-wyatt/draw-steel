@@ -10,7 +10,6 @@ import argparse
 import asyncio
 import base64
 import json
-import os
 from pathlib import Path
 from typing import List, Optional
 
@@ -19,47 +18,15 @@ from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
 from tqdm.asyncio import tqdm
 
+from backend.utils.keys import get_openrouter_api_key
+
 load_dotenv()
 
 
-def get_openrouter_api_key() -> Optional[str]:
-    """Get OPENROUTER_API_KEY from environment or ~/.zshenv file."""
-    # First check environment
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if api_key:
-        return api_key
-
-    # Try loading from ~/.zshenv
-    zshenv_path = Path.home() / ".zshenv"
-    if zshenv_path.exists():
-        try:
-            with open(zshenv_path, "r") as f:
-                for line in f:
-                    line = line.strip()
-                    # Handle both "export OPENROUTER_API_KEY=" and "OPENROUTER_API_KEY="
-                    if line.startswith("export OPENROUTER_API_KEY="):
-                        value = line.split("=", 1)[1].strip()
-                    elif line.startswith("OPENROUTER_API_KEY="):
-                        value = line.split("=", 1)[1].strip()
-                    else:
-                        continue
-
-                    # Remove quotes if present
-                    if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    elif value.startswith("'") and value.endswith("'"):
-                        value = value[1:-1]
-                    return value
-        except Exception:
-            pass
-
-    return None
-
-
-# Use images from backend/data/images directory
+# Use images from backend/data/heroes/images directory
 SCRIPT_DIR = Path(__file__).parent
 REPO_ROOT = SCRIPT_DIR.parent.parent.parent
-IMAGES_DIR = REPO_ROOT / "backend" / "data" / "images"
+IMAGES_DIR = REPO_ROOT / "backend" / "data" / "heroes" / "images"
 
 
 class PageClassification(BaseModel):
@@ -273,7 +240,7 @@ async def main():
         "--images-dir",
         type=str,
         default=None,
-        help="Directory containing page images (default: backend/data/images relative to repo root)",
+        help="Directory containing page images (default: backend/data/heroes/images relative to repo root)",
     )
     parser.add_argument(
         "--max-concurrent",
