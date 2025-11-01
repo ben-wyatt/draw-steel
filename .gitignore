@@ -8,8 +8,42 @@ wheels/
 
 # Virtual environments
 .venv
-data-transform/
+.venv/
+backend/.venv/
+backend/.venv
+env/
+ENV/
+
+# Backend directory
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.egg-info/
+backend/**/*.egg-info/
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/.mypy_cache/
+backend/.coverage
+backend/htmlcov/
+
+# Environment files
 .env
+.env.local
+.env.*.local
+
+# Data directories
+data-transform/
+data/
 images/
 pdf/
-data/
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+backend/**/.ipynb_checkpoints/

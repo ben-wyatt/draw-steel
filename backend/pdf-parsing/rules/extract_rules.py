@@ -31,7 +31,7 @@ else:
 
 def extract_text_blocks(page: fitz.Page) -> List[Dict]:
     """Extract text blocks with detailed information."""
-    text_dict = page.get_text("dict")
+    text_dict = page.get_text("dict")  # type: ignore[attr-defined]
     blocks = []
     
     for block in text_dict.get("blocks", []):
