@@ -101,8 +101,8 @@ def main():
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="images",
-        help="Output directory for images (default: images/ relative to script)",
+        default=None,
+        help="Output directory for images (default: backend/data/images relative to repo root)",
     )
     parser.add_argument(
         "--dpi", type=int, default=150, help="Resolution in DPI (default: 150)"
@@ -123,9 +123,11 @@ def main():
         print(f"ERROR: PDF file not found: {pdf_path}")
         return
 
-    # Set up output directory (relative to script location)
-    script_dir = Path(__file__).parent
-    output_dir = script_dir / args.output_dir
+    # Set up output directory (default to backend/data/images relative to repo root)
+    if args.output_dir:
+        output_dir = Path(args.output_dir)
+    else:
+        output_dir = REPO_ROOT / "backend" / "data" / "images"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Open PDF

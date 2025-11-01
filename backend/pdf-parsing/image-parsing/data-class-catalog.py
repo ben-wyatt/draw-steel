@@ -56,9 +56,10 @@ def get_openrouter_api_key() -> Optional[str]:
     return None
 
 
-# Use images from whole-image-parsing directory
+# Use images from backend/data/images directory
 SCRIPT_DIR = Path(__file__).parent
-IMAGES_DIR = SCRIPT_DIR / "whole-image-parsing" / "images"
+REPO_ROOT = SCRIPT_DIR.parent.parent.parent
+IMAGES_DIR = REPO_ROOT / "backend" / "data" / "images"
 
 
 class PageClassification(BaseModel):
@@ -272,7 +273,7 @@ async def main():
         "--images-dir",
         type=str,
         default=None,
-        help="Directory containing page images (default: whole-image-parsing/images/)",
+        help="Directory containing page images (default: backend/data/images relative to repo root)",
     )
     parser.add_argument(
         "--max-concurrent",
