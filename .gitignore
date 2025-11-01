@@ -35,6 +35,7 @@ data-transform/
 data/
 images/
 pdf/
+workshop/
 
 # IDE/Editor files
 .vscode/
