@@ -16,8 +16,11 @@ Extracts game abilities from Heroes using font-based pattern matching to identif
 
 Parses monster stat block images from the PDFs using vision models (GPT-5 via OpenRouter) to extract structured Monster data including stats, defenses, abilities, and traits. The pipeline encodes images as base64 and uses structured output parsing to convert visual stat blocks into Pydantic Monster models. Contains design notes and examples for modeling stat blocks with discriminated unions for effects, potency gates, and tiered power rolls.
 
+Honestly this is super powerful. GPT-5-mini can perfectly OCR the text of the PDF.
 
+That makes me think that what we should be doing is going off of the classifiers: if a page has a specific class then it should be OCRed with a specific prompt for extraction.
 
+first thing required for this is to have really good classification done already.
 
 ## other extraction ideas
 

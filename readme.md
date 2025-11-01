@@ -45,7 +45,7 @@ The most basic functionality that I want is to be able to do mechanic search ver
 
 Let's grind out the very basics of something like that first. goal is *incredibly fast retrieval* and an easy way to open up PDF from response.
 
-
+LLMs can mostly do what I want them to already. Just using image processing.
 
 
 ## Lore Master
