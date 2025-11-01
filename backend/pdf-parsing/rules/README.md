@@ -11,8 +11,8 @@ uv run python pdf-parsing/rules/extract_rules.py
 ## Output
 
 The script generates:
-- `data/heroes/rules/extracted_rules.json` - JSON file with all extracted text chunks
-- `data/heroes/rules/extraction_summary.txt` - Summary of extraction results
+- `backend/data/heroes/rules/extracted_rules.json` - JSON file with all extracted text chunks
+- `backend/data/heroes/rules/extraction_summary.txt` - Summary of extraction results
 
 ## JSON Structure
 

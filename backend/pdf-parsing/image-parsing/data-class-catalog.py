@@ -168,8 +168,19 @@ async def classify_page(
 
 Classify the page into data types such as:
 - monster_stat_block: Monster/NPC stat blocks with stats, abilities, traits
+- ancestry: flavor text or mechanics related to player character ancestries
+- background: flavor text or mechanics related to player character backgrounds
+- class: flavor text or mechanics related to player character classes
+- kit: flavor text or mechanics related to player character kits
+- perks: outside-combat character benefits (described specifically as perks in the text)
+- complications: player character complications (described specifically as complications in the text)
 - character_ability: Player character abilities with power rolls and effects
-- equipment: Weapons, armor, items
+- negotiation: mechanics related to negotiation with NPCs (explicitly described as negotiation in the text)
+- downtime_projects: mechanics related to downtime projects (explicitly described as downtime projects in the text)
+- treasures: supernatural items for PCs
+- titles: player character titles
+- renown: player character renown
+- wealth: player character wealth
 - game_mechanics: Rules explanations, mechanics
 - table: Data tables
 - flavor_text: Narrative text, descriptions
@@ -291,8 +302,12 @@ async def main():
         output_path = Path(args.output)
     else:
         # Auto-generate output path based on PDF source
-        repo_root = Path(__file__).parent.parent.parent
-        output_path = repo_root / "data" / pdf_source / "page-classifications.json"
+        repo_root = Path(
+            __file__
+        ).parent.parent.parent.parent  # Go up to repo root directory
+        output_path = (
+            repo_root / "backend" / "data" / pdf_source / "page-classifications.json"
+        )
         print(f"Auto-detected output path: {output_path}")
 
     # Load existing classifications if output file exists

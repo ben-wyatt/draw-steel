@@ -11,7 +11,7 @@ import re
 
 # Try to find PDF - check multiple possible locations
 SCRIPT_DIR = Path(__file__).parent
-REPO_ROOT = SCRIPT_DIR.parent.parent
+REPO_ROOT = SCRIPT_DIR.parent.parent.parent.parent  # Go up to repo root directory
 HEROES_PDF_ABS = Path("/Users/Ben.Wyatt/Personal/Draw Steel v1/Draw_Steel_Heroes_v1.pdf")
 HEROES_PDF_REL = REPO_ROOT / "pdf" / "Draw_Steel_Heroes_v1.pdf"
 HEROES_PDF_REPOS = Path("/Users/benwyatt/Repos/draw-steel/pdf/Draw_Steel_Heroes_v1.pdf")
@@ -387,7 +387,7 @@ def main():
                 print("...")
         
         # Save to JSON
-        output_dir = REPO_ROOT / "data" / "heroes" / "rules"
+        output_dir = REPO_ROOT / "backend" / "data" / "heroes" / "rules"
         output_dir.mkdir(parents=True, exist_ok=True)
         output_file = output_dir / "extracted_rules.json"
         
