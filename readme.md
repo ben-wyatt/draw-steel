@@ -1,10 +1,9 @@
 I want to make a playable version of Draw Steel, the new MCDM TTRPG, with LLMs.
-There should be a few different parts to this. I can start with building a rules retrieval system, which I will call Rules Lawyer.  Then I can try to do something similar for Lore Master.
-
-There should be structured parts and unstructured parts.  
+There should be a few different parts to this. I can start with building a rules retrieval system, which I will call Rules Lawyer. 
 
 
-## Rules Lawyer
+
+# Rules Lawyer
 - data mine the PDF
 - Construct knowledge base that allows for efficient retrieval of game rules
 - assemble metaprompt that gives a good overview of the basics of the game
@@ -13,18 +12,39 @@ There should be structured parts and unstructured parts.
 - requires lots of structured formatting for things like statblocks and class features and stuff
 - balance between tool availability and 
 
+## Mining the PDF
 
-### Structured data
+We have two PDFs: Heroes and Monsters
 
-ill have a bunch of pydantic data models that I use as structured data. First thing im going to try is converting PDF to markdown (which looks phenomenal) then try to do a bunch of regex matches to grab monster stat blocks.
+They both contain structured content, like monster stat blocks, character abilities, tables, etc.  And they also contain lore text and general natural language rules.
 
-### derived from PDFs
+For the retrieval system I want to be able to gracefully handle all of these on retrieval.  So if I search for "Ajax the Invincible" I should both get his stat block and a bunch of lore where he is mentioned from across the book.
 
-there are two PDFs: heroes and monsters.  monsters is mostly monster stat blocks and lore, 300 pages worth. it also has about 20 pages of rules on how to run monsters, 20 pages on dynamic terrain, and a few more pages on retainers (PC sidekicks).
+I think what that means is that we have a hybrid keyword-semantic natural language search mechanism a la chroma or whatever.  And also return the JSON object that represents his stat block. 
+
+Ideally the retrieval gives well-formatted paragraphs (so no lazy chunking). 
+
+At first I was thinking that we should use pydantic data models to represent the structured formatting.  This would allow for me to take advantage of LLMs for the extraction: convert pdf to image, then send image to LLM and force structured output of the monster stat block.
+
+the other way would be to get really into the weeds with the PDF extraction. In `pdf-parsing/abilities` I was able to vibe-code a proper pdf metadata-to-ability structured output.
+
+monsters is mostly monster stat blocks and lore, 300 pages worth. it also has about 20 pages of rules on how to run monsters, 20 pages on dynamic terrain, and a few more pages on retainers (PC sidekicks).
 
 heroes contains the basics of the rules, how to make characters, combat mechanics, rules for negotiations and montages. 
 
-lets create a 
+the front-end that I end up writing for retrieval should be able to link back to the right page of the PDF really easily.
+
+Stack-rank of PDF ingestion:
+- rules: requires chunking strategy thoughts, should be able to return things like condition definitions, combat rules, or triggered actions. goal is super low latency retrieval 
+- monster stats
+- class traits and abilities
+
+### basic retrieval
+
+The most basic functionality that I want is to be able to do mechanic search very quickly: query for "surprise round" to get all the rules on surprise in combat. "shifting" to find out what shifting is. different conditions. basic lookup.
+
+Let's grind out the very basics of something like that first. goal is *incredibly fast retrieval* and an easy way to open up PDF from response.
+
 
 
 
@@ -36,6 +56,8 @@ lets create a
 
 ## Live Play
 
+This is a long shot.
+
 - rolls dice (or UI elements to make player do it)
 - has a sense of gamestate: character and monster stamina, positioning,
 - can run combat: this would be quite complicated. 
@@ -45,49 +67,3 @@ lets create a
 
 what would make this a lot easier... some type of "system explorer" that is effectively DSPy but e2e automated. building up prompts on how to use tools over time.
 
-
-## Notes along the way
-
-holy crap the markdown you get from the PDF using `markitdown` is insanely good.  I think I can just do some regex parsing and might be able to get all the way through it.
-
-## Quests
-
-- regex parse for malice abilities
-- make an eval based on the markdown files.
-
-
-
-# Rules Lawyer
-
-## Structured Data
-There are primitives, which are core game mechanics
-- Power Rolls
-- Characteristics
-- Abilities
-- etc
-
-There are creatures. All creatures have
-- characteristics
-- abilities
-
-
-# Some Assumptions
-- pages refer to the page number as described at the bottom of the page in the PDF, not the actual PDF page number. "Page 1" is actually Page 14 in the PDF
-
-
-# Grand Plan
-
-Fast retrieval is the first goal. I want <200ms retrieval on the index, which should include (in order of importance):
-- rule word lookup (verbatim excerpts): conditions, rules for grappling, etc
-- abilities
-- monster stat blocks
-
-chatbot?
-
-UI in line with the PDF?
-
-
-
-# Retrieval
-
-which one should I use?

@@ -1,6 +1,8 @@
-from pydantic import BaseModel
-from models.primitives import DamageType, StatBlock, Ability, Size
 from enum import Enum
+
+from pydantic import BaseModel
+
+from models.primitives import Ability, DamageType, MovementType, Size, StatBlock
 
 
 class Keyword(str, Enum):
@@ -22,6 +24,7 @@ class Keyword(str, Enum):
     UNDEAD = "undead"
     OTHER = "other"
 
+
 class CreatureOrganization(str, Enum):
     MINION = "minion"
     HORDE = "horde"
@@ -29,6 +32,7 @@ class CreatureOrganization(str, Enum):
     LEADER = "leader"
     ELITE = "elite"
     SOLO = "solo"
+
 
 class CreatureRole(str, Enum):
     ABUSHER = "ambusher"
@@ -42,18 +46,13 @@ class CreatureRole(str, Enum):
     SUPPORT = "support"
 
 
-#class MaliceFeature
-#class VillainAction
-
-
-    
+# class MaliceFeature
+# class VillainAction
 
 
 class Trait(BaseModel):
     name: str
     description: str
-
-
 
 
 class Monster(BaseModel):
@@ -79,15 +78,8 @@ class Monster(BaseModel):
     # malice_features: list[MaliceFeature,None]
     # villain_actions: list[VillainAction,None]
 
-    
+    # other abilities???
 
-    #other abilities???
+    # malice??
 
-    #malice??
-
-    #villain actions
-
-
-
-
-    
+    # villain actions
