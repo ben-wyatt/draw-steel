@@ -205,8 +205,8 @@ async def main():
     parser.add_argument(
         "--max-concurrent",
         type=int,
-        default=10,
-        help="Maximum number of concurrent requests (default: 10)",
+        default=32,
+        help="Maximum number of concurrent requests (default: 32)",
     )
     parser.add_argument(
         "--dpi",

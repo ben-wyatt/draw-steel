@@ -8,8 +8,10 @@ import argparse
 from pathlib import Path
 from typing import Optional
 
+from qdrant_client.models import Distance, PointStruct, VectorParams
 from rich.console import Console
 from rich.markdown import Markdown
+from tqdm import tqdm
 
 from backend.database.chunker import MarkdownChunker
 from backend.database.database import Database
@@ -195,6 +197,166 @@ def interactive_search(
         db.close()
 
 
+def combine_collections(
+    source_collection_1: str,
+    source_collection_2: str,
+    target_collection: str,
+    batch_size: int = 100,
+):
+    """
+    Combine two Qdrant collections into a new collection.
+
+    Args:
+        source_collection_1: Name of first source collection
+        source_collection_2: Name of second source collection
+        target_collection: Name of target collection to create
+        batch_size: Batch size for upserting points (default: 100)
+    """
+    print("\nCombining collections:")
+    print(f"  Source 1: {source_collection_1}")
+    print(f"  Source 2: {source_collection_2}")
+    print(f"  Target: {target_collection}\n")
+
+    # Use a single Database instance to access all collections through the same client
+    # This avoids the "already accessed" error with Qdrant's local client
+    db = Database(collection_name=source_collection_1)
+
+    try:
+        # Check that both source collections exist
+        collections = db.client.get_collections().collections
+        collection_names = [c.name for c in collections]
+
+        if source_collection_1 not in collection_names:
+            print(f"ERROR: Source collection '{source_collection_1}' not found")
+            return
+        if source_collection_2 not in collection_names:
+            print(f"ERROR: Source collection '{source_collection_2}' not found")
+            return
+
+        # Check if target collection already exists
+        if target_collection in collection_names:
+            print(f"WARNING: Target collection '{target_collection}' already exists")
+            response = input("Do you want to overwrite it? (yes/no): ").strip().lower()
+            if response != "yes":
+                print("Aborted.")
+                return
+            print(f"Deleting existing collection '{target_collection}'...")
+            db.client.delete_collection(target_collection)
+
+        # Get collection info to check vector dimensions
+        coll1_info = db.client.get_collection(source_collection_1)
+        coll2_info = db.client.get_collection(source_collection_2)
+
+        # Access vector dimension (handles both named and unnamed vectors)
+        vectors1 = coll1_info.config.params.vectors
+        vectors2 = coll2_info.config.params.vectors
+
+        if vectors1 is None or vectors2 is None:
+            print("ERROR: Collections must have vector configuration")
+            return
+
+        # Handle both dict (named vectors) and VectorParams (unnamed vectors)
+        if isinstance(vectors1, dict):
+            # Named vectors - get first vector config
+            dim1 = next(iter(vectors1.values())).size
+        else:
+            dim1 = vectors1.size
+
+        if isinstance(vectors2, dict):
+            dim2 = next(iter(vectors2.values())).size
+        else:
+            dim2 = vectors2.size
+
+        if dim1 != dim2:
+            print(
+                f"ERROR: Collections have incompatible vector dimensions: "
+                f"{source_collection_1} has {dim1}, {source_collection_2} has {dim2}"
+            )
+            return
+
+        print(f"Vector dimension: {dim1}")
+        print(f"Points in {source_collection_1}: {coll1_info.points_count}")
+        print(f"Points in {source_collection_2}: {coll2_info.points_count}")
+
+        # Create target collection
+        print(f"\nCreating target collection '{target_collection}'...")
+        db.client.create_collection(
+            collection_name=target_collection,
+            vectors_config=VectorParams(
+                size=dim1,
+                distance=Distance.COSINE,
+            ),
+        )
+
+        # Retrieve all points from both collections
+        all_points = []
+
+        print(f"\nRetrieving points from '{source_collection_1}'...")
+        offset = None
+        while True:
+            result, offset = db.client.scroll(
+                collection_name=source_collection_1,
+                limit=1000,
+                offset=offset,
+                with_payload=True,
+                with_vectors=True,
+            )
+            all_points.extend(result)
+            if offset is None:
+                break
+        print(f"Retrieved {len(all_points)} points from '{source_collection_1}'")
+
+        print(f"\nRetrieving points from '{source_collection_2}'...")
+        offset = None
+        points_from_2 = 0
+        while True:
+            result, offset = db.client.scroll(
+                collection_name=source_collection_2,
+                limit=1000,
+                offset=offset,
+                with_payload=True,
+                with_vectors=True,
+            )
+            all_points.extend(result)
+            points_from_2 += len(result)
+            if offset is None:
+                break
+        print(f"Retrieved {points_from_2} points from '{source_collection_2}'")
+
+        print(f"\nTotal points to add: {len(all_points)}")
+
+        # Convert to PointStruct and upsert in batches
+        print(f"\nAdding points to '{target_collection}'...")
+        point_structs = [
+            PointStruct(
+                id=point.id,
+                vector=point.vector,
+                payload=point.payload,
+            )
+            for point in all_points
+        ]
+
+        # Upsert in batches
+        for i in tqdm(
+            range(0, len(point_structs), batch_size),
+            desc="Upserting points",
+            unit="batch",
+        ):
+            batch = point_structs[i : i + batch_size]
+            db.client.upsert(collection_name=target_collection, points=batch)
+
+        # Show final collection info
+        target_info = db.client.get_collection(target_collection)
+        print("\nCollections combined successfully!")
+        print(f"Target collection: {target_collection}")
+        print(f"Total points: {target_info.points_count}")
+        print(f"Vectors: {target_info.vectors_count}")
+        print(f"Status: {target_info.status}")
+
+    finally:
+        db.close()
+
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -297,6 +459,35 @@ def main():
         help="Maximum number of results per query (default: 5)",
     )
 
+    # Combine command
+    combine_parser = subparsers.add_parser(
+        "combine", help="Combine two collections into a new one"
+    )
+    combine_parser.add_argument(
+        "--source-collection-1",
+        type=str,
+        required=True,
+        help="Name of first source collection",
+    )
+    combine_parser.add_argument(
+        "--source-collection-2",
+        type=str,
+        required=True,
+        help="Name of second source collection",
+    )
+    combine_parser.add_argument(
+        "--target-collection",
+        type=str,
+        required=True,
+        help="Name of target collection to create",
+    )
+    combine_parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=100,
+        help="Batch size for upserting points (default: 100)",
+    )
+
     args = parser.parse_args()
 
     if args.command == "build":
@@ -323,6 +514,13 @@ def main():
         interactive_search(
             collection_name=args.collection_name,
             limit=args.limit,
+        )
+    elif args.command == "combine":
+        combine_collections(
+            source_collection_1=args.source_collection_1,
+            source_collection_2=args.source_collection_2,
+            target_collection=args.target_collection,
+            batch_size=args.batch_size,
         )
     else:
         parser.print_help()

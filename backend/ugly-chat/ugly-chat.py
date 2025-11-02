@@ -20,6 +20,7 @@ from rich.markdown import Markdown
 from rich.status import Status
 
 from backend.database.database import Database
+from backend.utils.cost import calculate_cost, get_model_pricing
 from backend.utils.keys import get_openrouter_api_key
 
 # Set tokenizers parallelism to avoid warnings
@@ -29,6 +30,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 SYSTEM_PROMPT = """You are a helpful assistant answering questions about Draw Steel TTRPG rules.
 Use the provided context from the rulebook to answer questions accurately.
 If the context doesn't contain relevant information, say so.
+
+Respond in markdown formatting, using rich markdown syntax. only use - for lists, not *.
 
 IMPORTANT: Do NOT include citations, page numbers, or reference numbers in your responses.
 Do NOT use format like [1], [2], [3] or similar citation markers.
@@ -237,45 +240,14 @@ def chat(
                     # Remove citations from first token
                     assistant_response = remove_citations(assistant_response)
 
-                    # Check if response looks like markdown (exclude citation brackets from detection)
-                    has_markdown = any(
-                        markdown_pattern in assistant_response
-                        for markdown_pattern in ["#", "**", "*", "`", "```"]
-                    )
-
-                    if has_markdown:
-                        # Use Live display to render markdown as it streams
-                        console.print()  # New line before markdown
-                        with Live(
-                            Markdown(assistant_response),
-                            console=console,
-                            refresh_per_second=10,
-                            vertical_overflow="visible",
-                        ) as live:
-                            # Process remaining chunks
-                            for chunk in stream:
-                                # Check for usage information (usually in final chunk)
-                                if hasattr(chunk, "usage") and chunk.usage is not None:
-                                    usage = chunk.usage
-
-                                # Check for content
-                                if chunk.choices and len(chunk.choices) > 0:
-                                    delta = chunk.choices[0].delta
-                                    if (
-                                        hasattr(delta, "content")
-                                        and delta.content is not None
-                                    ):
-                                        content = delta.content
-                                        # Remove citations from content as it streams
-                                        content = remove_citations(content)
-                                        assistant_response += content
-                                        # Update Live display with current markdown
-                                        live.update(Markdown(assistant_response))
-                    else:
-                        # Plain text streaming
-                        console.print("\nAssistant: ", end="")
-                        print(assistant_response, end="", flush=True)
-
+                    # Always use markdown rendering since system prompt requests markdown formatting
+                    console.print()  # New line before markdown
+                    with Live(
+                        Markdown(assistant_response),
+                        console=console,
+                        refresh_per_second=10,
+                        vertical_overflow="visible",
+                    ) as live:
                         # Process remaining chunks
                         for chunk in stream:
                             # Check for usage information (usually in final chunk)
@@ -292,10 +264,9 @@ def chat(
                                     content = delta.content
                                     # Remove citations from content as it streams
                                     content = remove_citations(content)
-                                    print(content, end="", flush=True)
                                     assistant_response += content
-
-                        print()  # New line after streaming
+                                    # Update Live display with current markdown
+                                    live.update(Markdown(assistant_response))
                 else:
                     # No tokens received
                     console.print("\nAssistant: (No response received)")
@@ -307,20 +278,32 @@ def chat(
                     r"\s*\[\d+\](?=\s|$|[.,;:!?])", "", assistant_response
                 )
 
-                # Print latency breakdown
-                print("\n[Latency Breakdown]")
-                print(f"  Database retrieval: {db_time * 1000:.1f} ms")
+                # Build concise latency breakdown
+                parts = []
+                parts.append(f"db={db_time * 1000:.0f}ms")
                 if first_token_time is not None:
-                    print(f"  Time to first token: {first_token_time * 1000:.1f} ms")
+                    parts.append(f"TTFT={first_token_time * 1000:.0f}ms")
                 else:
-                    print("  Time to first token: N/A (no tokens received)")
-                print(f"  Time to completion: {llm_completion_time * 1000:.1f} ms")
+                    parts.append("TTFT=N/A")
+                parts.append(f"completion={llm_completion_time * 1000:.0f}ms")
+
+                # Calculate cost if we have usage info
+                print(f"\n{'|'.join(parts)}")
+
                 if usage:
-                    print(f"  Input tokens: {usage.prompt_tokens}")
-                    print(f"  Output tokens: {usage.completion_tokens}")
+                    pricing = get_model_pricing(model, api_key)
+                    cost = calculate_cost(
+                        usage.prompt_tokens, usage.completion_tokens, pricing
+                    )
+                    if cost is not None:
+                        cost_str = f"|${cost:.4f}"
+                    else:
+                        cost_str = "|$N/A"
+                    print(
+                        f"token i/o={usage.prompt_tokens}/{usage.completion_tokens}{cost_str}"
+                    )
                 else:
-                    print("  Token usage: Not available in stream response")
-                print()
+                    print("tokens in/out = N/A")
 
                 # Add assistant response to history
                 conversation_history.append(
