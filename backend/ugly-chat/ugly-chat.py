@@ -92,7 +92,7 @@ def format_context(results: list[dict]) -> str:
 
 def chat(
     collection_name: str,
-    limit: int = 5,
+    top_k: int = 5,
     model: str = "google/gemini-2.5-flash-lite",
     db_path: Optional[str] = None,
 ):
@@ -101,7 +101,7 @@ def chat(
 
     Args:
         collection_name: Name of Qdrant collection to use
-        limit: Number of database results to include as context
+        top_k: Number of database results to include as context
         model: LLM model to use (default: google/gemini-2.5-flash-lite)
         db_path: Optional path to database directory
     """
@@ -139,7 +139,7 @@ def chat(
         print("=" * 80)
         print(f"Model: {model}")
         print(f"Collection: {collection_name}")
-        print(f"Context chunks per query: {limit}")
+        print(f"Context chunks per query: {top_k}")
         print("\nEnter your questions. Type 'exit', 'quit', or 'q' to stop.\n")
 
         conversation_history = []
@@ -159,7 +159,7 @@ def chat(
                 # Search database for context
                 print("\n[Searching database...]")
                 db_start = time.time()
-                db_results = db.search(query=query, limit=limit)
+                db_results = db.search(query=query, limit=top_k)
                 db_time = time.time() - db_start
 
                 # Format context
@@ -363,7 +363,7 @@ def main():
         help="Name of Qdrant collection (default: interactive selection)",
     )
     parser.add_argument(
-        "--limit",
+        "--top-k",
         type=int,
         default=5,
         help="Number of database results to include as context (default: 5)",
@@ -394,7 +394,7 @@ def main():
     # Start chat
     chat(
         collection_name=collection_name,
-        limit=args.limit,
+        top_k=args.top_k,
         model=args.model,
         db_path=args.db_path,
     )
