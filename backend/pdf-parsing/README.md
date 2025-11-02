@@ -4,9 +4,7 @@ each folder is an attempt at parsing structred data out of the book PDFs.
 
 the eventual goal is to be able to immediately ingest new PDFs as they come out for the game: adventures, rulebooks, monster books, etc etc.
 
-## basic hybrid retrieval
 
-get well formatted paragraph text chunks out of the PDFs. ignore abilities and stat blocks for now. ONLY support plain text.
 
 ## abilities
 
@@ -22,8 +20,8 @@ That makes me think that what we should be doing is going off of the classifiers
 
 first thing required for this is to have really good classification done already.
 
-## other extraction ideas
+### page-transcription
 
-- PDF page to image. give vision model image. could have a few different steps from here: 
- 1. classifier on data structure then individual calls for each data structure, single vision prompt with list of each data structure as output
- 2. create databank of all monster stat blocks using pydantic data classes. save data to disk for retrieval
+get well formatted paragraph text chunks out of the PDFs.  ONLY extract plain text. output is one big markdown file.
+
+
