@@ -71,6 +71,11 @@ class Database:
 
         # Create collection if it doesn't exist
         self._ensure_collection()
+        
+        # Check if collection uses named vectors and store that info
+        collection_info = self.client.get_collection(self.collection_name)
+        vectors_config = collection_info.config.params.vectors
+        self.uses_named_vectors = isinstance(vectors_config, dict)
 
     def _ensure_collection(self):
         """Create collection if it doesn't exist or recreate if dimension mismatch."""
@@ -90,7 +95,16 @@ class Database:
         else:
             # Check if dimension matches
             collection_info = self.client.get_collection(self.collection_name)
-            existing_dim = collection_info.config.params.vectors.size
+            vectors_config = collection_info.config.params.vectors
+            
+            # Handle both named vectors (dict) and single vector (VectorParams)
+            if isinstance(vectors_config, dict):
+                # Named vectors - get first vector config
+                existing_dim = next(iter(vectors_config.values())).size
+            else:
+                # Single unnamed vector
+                existing_dim = vectors_config.size
+                
             if existing_dim != self.embedding_dim:
                 print(
                     f"Collection '{self.collection_name}' exists with dimension {existing_dim}, "
@@ -191,14 +205,23 @@ class Database:
         query_filter = Filter(must=filter_conditions) if filter_conditions else None
 
         # Perform semantic search
-        # Note: Qdrant's hybrid search requires collection configuration with sparse vectors
-        # For now, we use semantic search. Keyword search can be added via payload filtering
-        results = self.client.search(
-            collection_name=self.collection_name,
-            query_vector=query_vector,
-            query_filter=query_filter,
-            limit=limit,
-        )
+        # Handle both named vectors (dict) and unnamed vectors
+        if self.uses_named_vectors:
+            # Collection uses named vectors like {"dense": ...}
+            results = self.client.search(
+                collection_name=self.collection_name,
+                query_vector={"dense": query_vector},
+                query_filter=query_filter,
+                limit=limit,
+            )
+        else:
+            # Collection uses unnamed vectors
+            results = self.client.search(
+                collection_name=self.collection_name,
+                query_vector=query_vector,
+                query_filter=query_filter,
+                limit=limit,
+            )
 
         # Format results
         formatted_results = []
@@ -237,12 +260,19 @@ class Database:
             # Generate embedding
             query_vector = self.embedding_model.embed_single(query)
 
-            # Search
-            self.client.search(
-                collection_name=self.collection_name,
-                query_vector=query_vector,
-                limit=10,
-            )
+            # Search (handle both named and unnamed vectors)
+            if self.uses_named_vectors:
+                self.client.search(
+                    collection_name=self.collection_name,
+                    query_vector={"dense": query_vector},
+                    limit=10,
+                )
+            else:
+                self.client.search(
+                    collection_name=self.collection_name,
+                    query_vector=query_vector,
+                    limit=10,
+                )
 
             elapsed = time.time() - start
             times.append(elapsed)
@@ -260,14 +290,26 @@ class Database:
     def get_collection_info(self) -> dict:
         """Get information about the collection."""
         collection_info = self.client.get_collection(self.collection_name)
+        vectors_config = collection_info.config.params.vectors
+        
+        # Handle both named vectors (dict) and single vector (VectorParams)
+        if isinstance(vectors_config, dict):
+            # Named vectors - get first vector config
+            vector_size = next(iter(vectors_config.values())).size
+            distance = next(iter(vectors_config.values())).distance
+        else:
+            # Single unnamed vector
+            vector_size = vectors_config.size
+            distance = vectors_config.distance
+        
         return {
             "name": self.collection_name,
             "points_count": collection_info.points_count,
             "vectors_count": collection_info.vectors_count,
             "status": collection_info.status,
             "config": {
-                "vector_size": collection_info.config.params.vectors.size,
-                "distance": collection_info.config.params.vectors.distance,
+                "vector_size": vector_size,
+                "distance": distance,
             },
         }
 
