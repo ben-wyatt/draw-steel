@@ -197,6 +197,47 @@ def interactive_search(
         db.close()
 
 
+def delete_collection(
+    collection_name: str,
+    force: bool = False,
+):
+    """Delete a collection."""
+    db = Database(collection_name=collection_name)
+    try:
+        # Check if collection exists
+        collections = db.client.get_collections().collections
+        collection_names = [c.name for c in collections]
+
+        if collection_name not in collection_names:
+            print(f"ERROR: Collection '{collection_name}' not found")
+            return
+
+        # Get collection info
+        info = db.client.get_collection(collection_name)
+        print(f"\nCollection: {collection_name}")
+        print(f"Points: {info.points_count}")
+        print(f"Vectors: {info.vectors_count}")
+        print(f"Status: {info.status}")
+
+        if not force:
+            response = (
+                input(
+                    f"\nAre you sure you want to delete '{collection_name}'? (yes/no): "
+                )
+                .strip()
+                .lower()
+            )
+            if response != "yes":
+                print("Aborted.")
+                return
+
+        print(f"\nDeleting collection '{collection_name}'...")
+        db.client.delete_collection(collection_name)
+        print(f"Collection '{collection_name}' deleted successfully.")
+    finally:
+        db.close()
+
+
 def combine_collections(
     source_collection_1: str,
     source_collection_2: str,
@@ -459,6 +500,20 @@ def main():
         help="Maximum number of results per query (default: 5)",
     )
 
+    # Delete command
+    delete_parser = subparsers.add_parser("delete", help="Delete a collection")
+    delete_parser.add_argument(
+        "--collection-name",
+        type=str,
+        required=True,
+        help="Name of collection to delete",
+    )
+    delete_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Skip confirmation prompt",
+    )
+
     # Combine command
     combine_parser = subparsers.add_parser(
         "combine", help="Combine two collections into a new one"
@@ -514,6 +569,11 @@ def main():
         interactive_search(
             collection_name=args.collection_name,
             limit=args.limit,
+        )
+    elif args.command == "delete":
+        delete_collection(
+            collection_name=args.collection_name,
+            force=args.force,
         )
     elif args.command == "combine":
         combine_collections(
