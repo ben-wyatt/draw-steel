@@ -37,3 +37,37 @@ def get_openrouter_api_key() -> Optional[str]:
             pass
 
     return None
+
+
+def get_hf_token() -> Optional[str]:
+    """Get HF_TOKEN from environment or ~/.zshenv file."""
+    # First check environment
+    token = os.getenv("HF_TOKEN")
+    if token:
+        return token
+
+    # Try loading from ~/.zshenv
+    zshenv_path = Path.home() / ".zshenv"
+    if zshenv_path.exists():
+        try:
+            with open(zshenv_path, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    # Handle both "export HF_TOKEN=" and "HF_TOKEN="
+                    if line.startswith("export HF_TOKEN="):
+                        value = line.split("=", 1)[1].strip()
+                    elif line.startswith("HF_TOKEN="):
+                        value = line.split("=", 1)[1].strip()
+                    else:
+                        continue
+
+                    # Remove quotes if present
+                    if value.startswith('"') and value.endswith('"'):
+                        value = value[1:-1]
+                    elif value.startswith("'") and value.endswith("'"):
+                        value = value[1:-1]
+                    return value
+        except Exception:
+            pass
+
+    return None

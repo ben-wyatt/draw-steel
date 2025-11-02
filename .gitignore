@@ -36,6 +36,7 @@ data/
 images/
 pdf/
 workshop/
+backend/data/db_files/
 
 # IDE/Editor files
 .vscode/
