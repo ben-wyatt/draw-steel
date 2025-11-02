@@ -6,8 +6,8 @@ Queries the database first, then sends the full conversation to LLM via OpenRout
 
 import argparse
 import os
+import re
 import sys
-import threading
 import time
 from pathlib import Path
 from typing import Optional
@@ -15,7 +15,9 @@ from typing import Optional
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from rich.console import Console
+from rich.live import Live
 from rich.markdown import Markdown
+from rich.status import Status
 
 from backend.database.database import Database
 from backend.utils.keys import get_openrouter_api_key
@@ -26,7 +28,11 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # System prompt for the chatbot
 SYSTEM_PROMPT = """You are a helpful assistant answering questions about Draw Steel TTRPG rules.
 Use the provided context from the rulebook to answer questions accurately.
-If the context doesn't contain relevant information, say so."""
+If the context doesn't contain relevant information, say so.
+
+IMPORTANT: Do NOT include citations, page numbers, or reference numbers in your responses.
+Do NOT use format like [1], [2], [3] or similar citation markers.
+Present information naturally without any citation markers."""
 
 
 def list_collections(db_path: Optional[str] = None) -> list[str]:
@@ -185,7 +191,6 @@ def chat(
                     conversation_history = conversation_history[-20:]
 
                 # Stream response from LLM
-                print("\nAssistant: ", end="", flush=True)
                 assistant_response = ""
 
                 # Start streaming request
@@ -196,81 +201,111 @@ def chat(
                     stream=True,
                 )
 
-                # Loading animation while waiting for first token
-                loading_stop = threading.Event()
-
-                def loading_animation():
-                    """Show '...' animation while waiting for first token."""
-                    dots = 0
-                    while not loading_stop.is_set():
-                        # Show animated dots: ".", "..", "...", then repeat
-                        dot_count = (dots % 3) + 1
-                        # Clear line and show "Assistant: " with dots
-                        print(
-                            f"\rAssistant: {'.' * dot_count}{' ' * (3 - dot_count)}",
-                            end="",
-                            flush=True,
-                        )
-                        dots += 1
-                        time.sleep(0.2)
-
-                loading_thread = threading.Thread(target=loading_animation, daemon=True)
-                loading_thread.start()
-
                 # Process stream
                 first_token_received = False
                 first_token_time = None
                 usage = None
 
-                for chunk in stream:
-                    # Check for usage information (usually in final chunk)
-                    if hasattr(chunk, "usage") and chunk.usage is not None:
-                        usage = chunk.usage
+                # Use Rich status spinner while waiting for first token
+                with Status("[bold yellow]Thinking...", console=console):
+                    # Wait for first chunk with content
+                    for chunk in stream:
+                        # Check for usage information (usually in final chunk)
+                        if hasattr(chunk, "usage") and chunk.usage is not None:
+                            usage = chunk.usage
 
-                    # Check for content
-                    if chunk.choices and len(chunk.choices) > 0:
-                        delta = chunk.choices[0].delta
-                        if hasattr(delta, "content") and delta.content is not None:
-                            if not first_token_received:
-                                # First token received, stop loading animation
-                                first_token_time = time.time() - llm_start
-                                loading_stop.set()
-                                # Wait a tiny bit for thread to stop
-                                time.sleep(0.05)
-                                # Clear loading animation and show "Assistant: " again
-                                print(
-                                    "\r" + " " * 20 + "\rAssistant: ",
-                                    end="",
-                                    flush=True,
-                                )
-                                first_token_received = True
+                        # Check for content
+                        if chunk.choices and len(chunk.choices) > 0:
+                            delta = chunk.choices[0].delta
+                            if hasattr(delta, "content") and delta.content is not None:
+                                if not first_token_received:
+                                    first_token_time = time.time() - llm_start
+                                    first_token_received = True
+                                    assistant_response = delta.content
+                                    # Break out of status context to start streaming
+                                    break
 
-                            content = delta.content
-                            print(content, end="", flush=True)
-                            assistant_response += content
+                # Stream remaining chunks with Live markdown rendering
+                if first_token_received:
+                    # Helper function to remove citation markers (e.g., [1], [2], [3])
+                    # Only matches standalone citations, not markdown links like [text](url)
+                    def remove_citations(text: str) -> str:
+                        # Remove citations like [1], [2], [3] that appear at end of sentences/clauses
+                        # Pattern: whitespace + [digit(s)] at end of word/clause
+                        return re.sub(r"\s*\[\d+\](?=\s|$|[.,;:!?])", "", text)
 
-                # Ensure loading animation is stopped
-                loading_stop.set()
-                time.sleep(0.05)  # Let thread finish
+                    # Remove citations from first token
+                    assistant_response = remove_citations(assistant_response)
 
-                if not first_token_received:
-                    # No tokens received, clear loading animation
-                    print("\r" + " " * 20 + "\r", end="", flush=True)
+                    # Check if response looks like markdown (exclude citation brackets from detection)
+                    has_markdown = any(
+                        markdown_pattern in assistant_response
+                        for markdown_pattern in ["#", "**", "*", "`", "```"]
+                    )
+
+                    if has_markdown:
+                        # Use Live display to render markdown as it streams
+                        console.print()  # New line before markdown
+                        with Live(
+                            Markdown(assistant_response),
+                            console=console,
+                            refresh_per_second=10,
+                            vertical_overflow="visible",
+                        ) as live:
+                            # Process remaining chunks
+                            for chunk in stream:
+                                # Check for usage information (usually in final chunk)
+                                if hasattr(chunk, "usage") and chunk.usage is not None:
+                                    usage = chunk.usage
+
+                                # Check for content
+                                if chunk.choices and len(chunk.choices) > 0:
+                                    delta = chunk.choices[0].delta
+                                    if (
+                                        hasattr(delta, "content")
+                                        and delta.content is not None
+                                    ):
+                                        content = delta.content
+                                        # Remove citations from content as it streams
+                                        content = remove_citations(content)
+                                        assistant_response += content
+                                        # Update Live display with current markdown
+                                        live.update(Markdown(assistant_response))
+                    else:
+                        # Plain text streaming
+                        console.print("\nAssistant: ", end="")
+                        print(assistant_response, end="", flush=True)
+
+                        # Process remaining chunks
+                        for chunk in stream:
+                            # Check for usage information (usually in final chunk)
+                            if hasattr(chunk, "usage") and chunk.usage is not None:
+                                usage = chunk.usage
+
+                            # Check for content
+                            if chunk.choices and len(chunk.choices) > 0:
+                                delta = chunk.choices[0].delta
+                                if (
+                                    hasattr(delta, "content")
+                                    and delta.content is not None
+                                ):
+                                    content = delta.content
+                                    # Remove citations from content as it streams
+                                    content = remove_citations(content)
+                                    print(content, end="", flush=True)
+                                    assistant_response += content
+
+                        print()  # New line after streaming
+                else:
+                    # No tokens received
+                    console.print("\nAssistant: (No response received)")
 
                 llm_completion_time = time.time() - llm_start
 
-                print()  # New line after streaming
-
-                # Render markdown if response contains markdown-like content
-                if assistant_response.strip():
-                    # Check if response looks like markdown (has markdown syntax)
-                    has_markdown = any(
-                        markdown_pattern in assistant_response
-                        for markdown_pattern in ["#", "**", "*", "`", "[", "]", "```"]
-                    )
-                    if has_markdown:
-                        # Render formatted markdown version
-                        console.print(Markdown(assistant_response))
+                # Final cleanup: remove any remaining citations
+                assistant_response = re.sub(
+                    r"\s*\[\d+\](?=\s|$|[.,;:!?])", "", assistant_response
+                )
 
                 # Print latency breakdown
                 print("\n[Latency Breakdown]")
