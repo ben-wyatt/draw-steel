@@ -1,92 +1,60 @@
 """
-Data Types Catalog Builder
+Page Classification Catalog Builder
 
 Uses GPT-5 Nano to analyze PDF page images and catalog what data structure types
-are present on each page (monster stat blocks, abilities, equipment, etc.).
-Auto-detects PDF source (heroes/monsters) and saves to appropriate location.
+are present on each page. Supports both Heroes and Monsters books.
+
+Auto-detects PDF source from images directory path or accepts explicit specification.
 """
 
 import argparse
 import asyncio
 import base64
 import json
-import os
+import re
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Type, Union
 
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
 from tqdm.asyncio import tqdm
 
+from backend.utils.keys import get_openrouter_api_key
+
 load_dotenv()
 
 
-def get_openrouter_api_key() -> Optional[str]:
-    """Get OPENROUTER_API_KEY from environment or ~/.zshenv file."""
-    # First check environment
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if api_key:
-        return api_key
-
-    # Try loading from ~/.zshenv
-    zshenv_path = Path.home() / ".zshenv"
-    if zshenv_path.exists():
-        try:
-            with open(zshenv_path, "r") as f:
-                for line in f:
-                    line = line.strip()
-                    # Handle both "export OPENROUTER_API_KEY=" and "OPENROUTER_API_KEY="
-                    if line.startswith("export OPENROUTER_API_KEY="):
-                        value = line.split("=", 1)[1].strip()
-                    elif line.startswith("OPENROUTER_API_KEY="):
-                        value = line.split("=", 1)[1].strip()
-                    else:
-                        continue
-
-                    # Remove quotes if present
-                    if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    elif value.startswith("'") and value.endswith("'"):
-                        value = value[1:-1]
-                    return value
-        except Exception:
-            pass
-
-    return None
-
-
-# Use images from backend/data/images directory
 SCRIPT_DIR = Path(__file__).parent
 REPO_ROOT = SCRIPT_DIR.parent.parent.parent
-IMAGES_DIR = REPO_ROOT / "backend" / "data" / "images"
 
 
-class PageClassification(BaseModel):
-    """Classification result for a single page."""
+class HeroesPageClassification(BaseModel):
+    """Classification result for a single page from the Heroes book."""
 
-    page_number: int
-    pdf_source: str = Field(
-        default="unknown",
-        description="Source PDF: 'heroes' or 'monsters'",
-    )
     data_types_found: List[str] = Field(
         default_factory=list,
-        description="List of data types found on this page (e.g., 'monster_stat_block', 'character_ability', 'equipment')",
+        description="List of data types found on this page (e.g., 'character_ability', 'ancestry', 'class', 'equipment')",
     )
-    confidence: str = Field(
-        default="medium",
-        description="Confidence level: 'low', 'medium', or 'high'",
-    )
-    notes: Optional[str] = Field(
-        default=None, description="Additional notes about the page content"
+    summary: str = Field(
+        description="A 2-3 sentence summary describing the main content and purpose of this page"
     )
 
 
-def encode_image(image_path: Path) -> str:
-    """Encode a local image file to a Base64 string."""
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode("utf-8")
+class MonstersPageClassification(BaseModel):
+    """Classification result for a single page from the Monsters book."""
+
+    data_types_found: List[str] = Field(
+        default_factory=list,
+        description="List of data types found on this page (e.g., 'monster_stat_block', 'monster_ability', 'monster_trait')",
+    )
+    summary: str = Field(
+        description="A 2-3 sentence summary describing the main content and purpose of this page"
+    )
+    names_of_monster_stat_block: Optional[List[str]] = Field(
+        default=None,
+        description="List of monster names found in stat blocks on this page (e.g., ['Goblin Warrior', 'Goblin Shaman'])",
+    )
 
 
 def detect_pdf_source(
@@ -126,74 +94,155 @@ def detect_pdf_source(
     return "heroes"
 
 
+def get_classification_model(
+    pdf_source: str,
+) -> Type[Union[HeroesPageClassification, MonstersPageClassification]]:
+    """
+    Get the appropriate Pydantic model for classification based on PDF source.
+
+    Args:
+        pdf_source: PDF source ('heroes' or 'monsters')
+
+    Returns:
+        The appropriate Pydantic model class
+    """
+    if pdf_source.lower() == "heroes":
+        return HeroesPageClassification
+    else:
+        return MonstersPageClassification
+
+
+def parse_page_number(image_path: Path) -> int:
+    """
+    Parse page number from image filename.
+
+    Expected format: page_0266.png -> 266
+
+    Args:
+        image_path: Path to the image file
+
+    Returns:
+        Page number as integer
+    """
+    filename = image_path.stem  # Gets filename without extension (e.g., "page_0266")
+    match = re.search(r"page_(\d+)", filename)
+    if match:
+        return int(match.group(1))
+    raise ValueError(f"Could not parse page number from filename: {image_path.name}")
+
+
+def encode_image(image_path: Path) -> str:
+    """Encode a local image file to a Base64 string."""
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+
+def build_classification_prompt(
+    pdf_source: str,
+    page_number: int,
+    data_types_list: Optional[List[str]] = None,
+) -> str:
+    """
+    Build the classification prompt based on PDF source.
+
+    Args:
+        pdf_source: PDF source ('heroes' or 'monsters')
+        page_number: Page number for tracking
+        data_types_list: Optional list of specific data types to look for
+
+    Returns:
+        Classification prompt string
+    """
+    # Build types prompt
+    if data_types_list:
+        types_prompt = (
+            f"\n\nLook for these specific data types: {', '.join(data_types_list)}"
+        )
+    else:
+        types_prompt = ""
+
+    if pdf_source.lower() == "heroes":
+        prompt = f"""Analyze this PDF page image from the Heroes book and identify what types of structured data or content are present.
+
+Identify the existence of the following data types on the page:
+- ancestry: flavor text or mechanics related to player character ancestries
+- background: flavor text or mechanics related to player character backgrounds
+- class: flavor text or mechanics related to player character classes
+- kit: specific additional game mechanic related to equipment loadouts
+- perks: outside-combat character benefits (described specifically as perks in the text)
+- complications: optional PC roleplaying benefits and drawbacks that influence gameplay (described specifically as complications in the text)
+- negotiation: mechanics related to negotiation with NPCs (explicitly described as negotiation in the text)
+- downtime_projects: mechanics related to downtime projects (explicitly described as downtime projects in the text)
+- treasures: supernatural items for PCs
+- certain rewards like: titles, renown, wealth. specifically described as such in the text
+- game_mechanics: Rules explanations, abilities, anything to do with *playing the game* and not just flavor text
+- table: roll charts and data tables
+- flavor_text: Narrative text, descriptions
+- one of the classes: censor, conduit, elementalist, fury, null, shadow, tactician, talent, troubadour
+
+Return a classification with:
+- The data types found (list of strings)
+- A 2-3 sentence summary describing the main content and purpose of this page
+
+Page number: {page_number}
+"""
+    else:
+        prompt = f"""Analyze this PDF page image from the Monsters book and identify what types of structured data or content are present.
+
+Identify the existence of the following data types on the page:
+- flavor_text: Narrative text, descriptions
+- general_game_mechanics: Rules explanations, abilities, anything to do with *playing the game* and not just flavor text
+- monster_stat_block: contains many, one, or a part of a monster stat block, including abilities, traits, and characteristics
+- table: roll charts and data tables
+- creature organization: if there is a stat block, call out the creature organization. one of: minion, horde, platoon, elite, leader, solo,
+- creature role: if there is a stat block, call out the creature role. one of: ambusher, artillery, brute, controller, defender, harrier, hexer, mount, support
+
+
+Return a classification with:
+- The data types found (list of strings)
+- A 2-3 sentence summary describing the main content and purpose of this page
+- names_of_monster_stat_block: If monster_stat_block is in data_types_found, provide a list of all monster names found in stat blocks on this page (e.g., ['Goblin Warrior', 'Goblin Shaman']). If no monster stat blocks are present, this field should be None or omitted.
+
+Page number: {page_number}
+"""
+
+    return prompt
+
+
 async def classify_page(
     client: AsyncOpenAI,
     image_path: Path,
-    page_number: int,
     semaphore: asyncio.Semaphore,
     pdf_source: str,
     model: str = "openai/gpt-5-nano",
     data_types_list: Optional[List[str]] = None,
-) -> PageClassification:
+):
     """
     Classify a single page image to identify what data types are present.
 
     Args:
         client: AsyncOpenAI client configured for OpenRouter
         image_path: Path to the page image
-        page_number: Page number for tracking
         semaphore: Semaphore to limit concurrent requests
+        pdf_source: PDF source ('heroes' or 'monsters')
         model: Model to use (default: gpt-5-nano)
         data_types_list: Optional list of data types to look for
 
     Returns:
-        PageClassification object with results
+        Tuple of (page_number, HeroesPageClassification or MonstersPageClassification object)
     """
+    # Parse page number from filename
+    page_number = parse_page_number(image_path)
+
     async with semaphore:
         # Encode image
         base64_image = encode_image(image_path)
 
-        # Build classification prompt
-        if data_types_list:
-            types_prompt = (
-                f"\n\nLook for these specific data types: {', '.join(data_types_list)}"
-            )
-        else:
-            types_prompt = (
-                "\n\nCommon data types to look for include: "
-                "monster_stat_block, character_ability, equipment, "
-                "game_mechanics, rules_text, table, flavor_text, etc."
-            )
+        # Get the appropriate classification model
+        ClassificationModel = get_classification_model(pdf_source)
 
-        prompt = f"""Analyze this PDF page image and identify what types of structured data or content are present.
-
-Classify the page into data types such as:
-- monster_stat_block: Monster/NPC stat blocks with stats, abilities, traits
-- ancestry: flavor text or mechanics related to player character ancestries
-- background: flavor text or mechanics related to player character backgrounds
-- class: flavor text or mechanics related to player character classes
-- kit: flavor text or mechanics related to player character kits
-- perks: outside-combat character benefits (described specifically as perks in the text)
-- complications: player character complications (described specifically as complications in the text)
-- character_ability: Player character abilities with power rolls and effects
-- negotiation: mechanics related to negotiation with NPCs (explicitly described as negotiation in the text)
-- downtime_projects: mechanics related to downtime projects (explicitly described as downtime projects in the text)
-- treasures: supernatural items for PCs
-- titles: player character titles
-- renown: player character renown
-- wealth: player character wealth
-- game_mechanics: Rules explanations, mechanics
-- table: Data tables
-- flavor_text: Narrative text, descriptions
-- other: Any other structured content{types_prompt}
-
-Return a classification with:
-- The data types found (list of strings)
-- Confidence level (low/medium/high)
-- Brief notes about what's on the page
-
-Page number: {page_number}
-"""
+        # Build classification prompt based on PDF source
+        prompt = build_classification_prompt(pdf_source, page_number, data_types_list)
 
         try:
             response = await client.beta.chat.completions.parse(
@@ -212,24 +261,25 @@ Page number: {page_number}
                         ],
                     }
                 ],
-                response_format=PageClassification,
+                response_format=ClassificationModel,
             )
 
             classification = response.choices[0].message.parsed
             if classification is None:
                 raise ValueError("Failed to parse classification from response")
 
-            return classification
+            return (page_number, classification)
 
         except Exception as e:
             print(f"  Error classifying page {page_number}: {e}")
-            # Return a default classification with error note
-            return PageClassification(
-                page_number=page_number,
-                pdf_source=pdf_source,
-                data_types_found=[],
-                confidence="low",
-                notes=f"Error during classification: {str(e)}",
+            # Return a default classification with error note using the appropriate model
+            ClassificationModel = get_classification_model(pdf_source)
+            return (
+                page_number,
+                ClassificationModel(
+                    data_types_found=[],
+                    summary=f"Error during classification: {str(e)}",
+                ),
             )
 
 
@@ -273,7 +323,7 @@ async def main():
         "--images-dir",
         type=str,
         default=None,
-        help="Directory containing page images (default: backend/data/images relative to repo root)",
+        help="Directory containing page images (default: backend/data/heroes/images relative to repo root)",
     )
     parser.add_argument(
         "--max-concurrent",
@@ -288,7 +338,8 @@ async def main():
     if args.images_dir:
         images_dir = Path(args.images_dir)
     else:
-        images_dir = IMAGES_DIR
+        # Default to heroes images directory
+        images_dir = REPO_ROOT / "backend" / "data" / "heroes" / "images"
 
     if not images_dir.exists():
         print(f"ERROR: Images directory not found: {images_dir}")
@@ -303,11 +354,8 @@ async def main():
         output_path = Path(args.output)
     else:
         # Auto-generate output path based on PDF source
-        repo_root = Path(
-            __file__
-        ).parent.parent.parent.parent  # Go up to repo root directory
         output_path = (
-            repo_root / "backend" / "data" / pdf_source / "page-classifications.json"
+            REPO_ROOT / "backend" / "data" / pdf_source / "page-classifications.json"
         )
         print(f"Auto-detected output path: {output_path}")
 
@@ -348,7 +396,7 @@ async def main():
     print(
         f"Processing pages {args.start_page} to {args.start_page + len(page_images) - 1}"
     )
-    print(f"Output: {args.output}")
+    print(f"Output: {output_path}")
     print(f"Max concurrent requests: {args.max_concurrent}\n")
 
     # Initialize OpenRouter client
@@ -368,27 +416,27 @@ async def main():
         classify_page(
             client,
             image_path,
-            args.start_page + i,
             semaphore,
             pdf_source,
             args.model,
         )
-        for i, image_path in enumerate(page_images)
+        for image_path in page_images
     ]
 
     # Use tqdm to show progress
-    classifications = await tqdm.gather(
+    classification_results = await tqdm.gather(
         *tasks, desc="Processing pages", total=len(tasks)
     )
 
-    # Convert new classifications to dict format, ensuring pdf_source is set
+    # Convert new classifications to dict format, ensuring pdf_source and page_number are set
     new_classifications_dict = {}
-    for cls in classifications:
+    for page_number, cls in classification_results:
         cls_dict = cls.model_dump()
-        # Ensure pdf_source is set even if it wasn't in the model response
-        if "pdf_source" not in cls_dict or cls_dict["pdf_source"] == "unknown":
-            cls_dict["pdf_source"] = pdf_source
-        new_classifications_dict[cls.page_number] = cls_dict
+        # Ensure pdf_source is set programmatically (not from LLM)
+        cls_dict["pdf_source"] = pdf_source
+        # Add page_number parsed from filename
+        cls_dict["page_number"] = page_number
+        new_classifications_dict[page_number] = cls_dict
 
     # Merge with existing classifications (new ones override existing)
     merged_classifications = {**existing_classifications, **new_classifications_dict}

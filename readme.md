@@ -32,7 +32,6 @@ monsters is mostly monster stat blocks and lore, 300 pages worth. it also has ab
 
 heroes contains the basics of the rules, how to make characters, combat mechanics, rules for negotiations and montages. 
 
-the front-end that I end up writing for retrieval should be able to link back to the right page of the PDF really easily.
 
 Stack-rank of PDF ingestion:
 - rules: requires chunking strategy thoughts, should be able to return things like condition definitions, combat rules, or triggered actions. goal is super low latency retrieval 
@@ -41,29 +40,18 @@ Stack-rank of PDF ingestion:
 
 ### basic retrieval
 
-The most basic functionality that I want is to be able to do mechanic search very quickly: query for "surprise round" to get all the rules on surprise in combat. "shifting" to find out what shifting is. different conditions. basic lookup.
+With PDF-to-image, image-transcribe, and the qdrant database implementation, I can do mechanic search very quickly: query for "surprise round" to get all the rules on surprise in combat. Right now timings are very good: database query time = 57ms, TTFT = 480ms, completion = 584ms. that is for gemini flash 2.5 lite with token in/out = 622/43.
 
-Let's grind out the very basics of something like that first. goal is *incredibly fast retrieval* and an easy way to open up PDF from response.
+Run:
+```bash
+uv run backend/ugly-chat/ugly-chat.py --model google/gemini-2.5-flash-lite --collection-name heroes-delian-full-v1
+```
 
+# Future Ideas
 
+Knowledge Graphs constructed via proper noun relationships like Obsidian. run retrieval on that.
 
+Live Play feature that uses LLM to simulate a DM. It rolls dice, has dynamic in-context gamestate, can run combat through a custom game engine.
 
-## Lore Master
-- data mine the adventure and setting
-- maybe obsidian cross-functionality? allows for both human readability and efficient LLM retrieval?
-
-
-
-## Live Play
-
-This is a long shot.
-
-- rolls dice (or UI elements to make player do it)
-- has a sense of gamestate: character and monster stamina, positioning,
-- can run combat: this would be quite complicated. 
-- memory: can read/write for session persistence. How would this effect context over time?
-
-
-
-what would make this a lot easier... some type of "system explorer" that is effectively DSPy but e2e automated. building up prompts on how to use tools over time.
+session scribe: record session transcript (needs powerful model probably), then writes summaries for players, DM, and prep notes for DM, checked against database.
 
