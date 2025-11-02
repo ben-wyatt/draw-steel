@@ -188,7 +188,7 @@ Cite page numbers and sections when referencing specific rules."""
                 llm_start = time.time()
                 stream = client.chat.completions.create(
                     model=model,
-                    messages=messages,
+                    messages=messages,  # type: ignore[arg-type]
                     stream=True,
                 )
 
