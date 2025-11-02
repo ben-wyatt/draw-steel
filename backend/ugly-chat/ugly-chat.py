@@ -23,6 +23,11 @@ from backend.utils.keys import get_openrouter_api_key
 # Set tokenizers parallelism to avoid warnings
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+# System prompt for the chatbot
+SYSTEM_PROMPT = """You are a helpful assistant answering questions about Draw Steel TTRPG rules.
+Use the provided context from the rulebook to answer questions accurately.
+If the context doesn't contain relevant information, say so."""
+
 
 def list_collections(db_path: Optional[str] = None) -> list[str]:
     """
@@ -129,12 +134,6 @@ def chat(
         else:
             print()
 
-        # System prompt
-        system_prompt = """You are a helpful assistant answering questions about Draw Steel TTRPG rules.
-Use the provided context from the rulebook to answer questions accurately.
-If the context doesn't contain relevant information, say so.
-Cite page numbers and sections when referencing specific rules."""
-
         print("=" * 80)
         print("Ugly Chat - Interactive Database Chatbot")
         print("=" * 80)
@@ -167,7 +166,7 @@ Cite page numbers and sections when referencing specific rules."""
                 context = format_context(db_results)
 
                 # Build messages
-                messages = [{"role": "system", "content": system_prompt}]
+                messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
                 # Add conversation history
                 messages.extend(conversation_history)
