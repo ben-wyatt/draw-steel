@@ -137,18 +137,18 @@ def chat(
         print(f"Collection: {info['name']}")
         print(f"Points: {info['points_count']}")
         print(f"Status: {info['status']}")
+        print(f"Model: {model}")
+        print(f"Context chunks per query: {top_k}")
 
         if info["points_count"] == 0:
             print("WARNING: Collection is empty. Chat will work but without context.\n")
         else:
             print()
 
-        print("=" * 80)
-        print("Ugly Chat - Interactive Database Chatbot")
-        print("=" * 80)
-        print(f"Model: {model}")
-        print(f"Collection: {collection_name}")
-        print(f"Context chunks per query: {top_k}")
+        print("=" * 8)
+        print("uglychat")
+        print("=" * 8)
+
         print("\nEnter your questions. Type 'exit', 'quit', or 'q' to stop.\n")
 
         conversation_history = []
