@@ -2,6 +2,8 @@
 
 Database system for storing and retrieving Draw Steel TTRPG rules using semantic search.
 
+MOST UP TO DATE DATABASE: `heroes-full-v1`
+
 ## Overview
 
 This module provides:
@@ -68,7 +70,7 @@ stats = db.test_latency("surprise round", num_runs=10)
 Process a markdown file and build the database:
 
 ```bash
-python -m backend.database.cli build --markdown-file backend/data/heroes/natural_language/pages_0260-0270_v2.md
+uv run python -m backend.database.cli build --markdown-file backend/data/heroes/natural_language/pages_0260-0270_v2.md
 ```
 
 Options:
@@ -81,7 +83,7 @@ Options:
 Test search functionality:
 
 ```bash
-python -m backend.database.cli search --query "surprise round" --limit 5
+uv run python -m backend.database.cli search --query "surprise round" --limit 5
 ```
 
 ### Test Latency
@@ -89,7 +91,7 @@ python -m backend.database.cli search --query "surprise round" --limit 5
 Measure search latency:
 
 ```bash
-python -m backend.database.cli latency --query "surprise round" --num-runs 10
+uv run python -m backend.database.cli latency --query "surprise round" --num-runs 10
 ```
 
 ### Interactive Search
@@ -97,7 +99,7 @@ python -m backend.database.cli latency --query "surprise round" --num-runs 10
 Interactive search mode with live latency display:
 
 ```bash
-python -m backend.database.cli interactive --collection-name test_draw_steel --limit 5
+uv run python -m backend.database.cli interactive --limit 5
 ```
 
 This will:

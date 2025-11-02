@@ -18,6 +18,7 @@ from qdrant_client.models import (
     PointStruct,
     VectorParams,
 )
+from tqdm import tqdm
 
 from backend.database.chunker import Chunk
 from backend.database.embeddings import EmbeddingModel
@@ -35,6 +36,7 @@ class Database:
         collection_name: str,
         db_path: Optional[Path] = None,
         embedding_model: Optional[EmbeddingModel] = None,
+        device: Optional[str] = None,
     ):
         """
         Initialize database.
@@ -43,6 +45,7 @@ class Database:
             collection_name: Name of Qdrant collection
             db_path: Path to database directory (default: backend/data/db_files)
             embedding_model: Embedding model instance (creates new if None)
+            device: Device to use for embedding model ('cpu', 'cuda', 'mps', or None for auto-detect)
         """
         if db_path is None:
             # Default to backend/data/db_files
@@ -59,7 +62,7 @@ class Database:
 
         # Initialize embedding model
         if embedding_model is None:
-            self.embedding_model = EmbeddingModel()
+            self.embedding_model = EmbeddingModel(device=device)
         else:
             self.embedding_model = embedding_model
 
@@ -121,9 +124,10 @@ class Database:
         # Generate embeddings in batches
         texts = [chunk.text for chunk in chunks]
         all_embeddings = []
-        for i in range(0, len(texts), batch_size):
+        num_batches = (len(texts) + batch_size - 1) // batch_size
+        for i in tqdm(range(0, len(texts), batch_size), desc="Generating embeddings", total=num_batches, unit="batch"):
             batch = texts[i : i + batch_size]
-            embeddings = self.embedding_model.embed(batch, show_progress=True)
+            embeddings = self.embedding_model.embed(batch, show_progress=False)
             all_embeddings.extend(embeddings)
 
         # Prepare points for Qdrant

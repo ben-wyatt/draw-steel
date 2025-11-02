@@ -19,20 +19,27 @@ class EmbeddingModel:
     Uses google/embeddinggemma-300m for generating semantic vectors.
     """
 
-    def __init__(self, model_name: str = "google/embeddinggemma-300m"):
+    def __init__(
+        self,
+        model_name: str = "google/embeddinggemma-300m",
+        device: Optional[str] = None,
+    ):
         """
         Initialize embedding model.
 
         Args:
             model_name: HuggingFace model name (default: google/embeddinggemma-300m)
+            device: Device to use ('cpu', 'cuda', 'mps', or None for auto-detect).
+                    Defaults to 'cpu' to avoid MPS memory issues on macOS.
         """
         self.model_name = model_name
+        self.device = device if device is not None else "cpu"
         self.model: Optional[SentenceTransformer] = None
         self._load_model()
 
     def _load_model(self):
         """Load the embedding model."""
-        print(f"Loading embedding model: {self.model_name}...")
+        print(f"Loading embedding model: {self.model_name} on device: {self.device}...")
         
         # Get HuggingFace token for gated models
         hf_token = get_hf_token()
@@ -41,10 +48,14 @@ class EmbeddingModel:
             self.model = SentenceTransformer(
                 self.model_name,
                 token=hf_token,
+                device=self.device,
             )
         else:
             # Try without token (for non-gated models)
-            self.model = SentenceTransformer(self.model_name)
+            self.model = SentenceTransformer(
+                self.model_name,
+                device=self.device,
+            )
         
         print("Model loaded successfully.")
 

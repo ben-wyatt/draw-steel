@@ -6,8 +6,7 @@ Processes markdown files through chunker and populates Qdrant database.
 
 import argparse
 from pathlib import Path
-
-from tqdm import tqdm
+from typing import Optional
 
 from backend.database.chunker import MarkdownChunker
 from backend.database.database import Database
@@ -15,9 +14,10 @@ from backend.database.database import Database
 
 def build_database(
     markdown_file: Path,
-    collection_name: str = "draw_steel_natural_language",
+    collection_name: str = "heroes-full-v1",
     target_tokens: int = 600,
     batch_size: int = 32,
+    device: Optional[str] = None,
 ):
     """
     Build database from markdown file.
@@ -27,6 +27,7 @@ def build_database(
         collection_name: Name of Qdrant collection
         target_tokens: Target chunk size in tokens
         batch_size: Batch size for embedding generation
+        device: Device to use for embeddings ('cpu', 'cuda', 'mps', or None for auto-detect)
     """
     if not markdown_file.exists():
         print(f"ERROR: Markdown file not found: {markdown_file}")
@@ -34,7 +35,10 @@ def build_database(
 
     print(f"\nBuilding database from: {markdown_file}")
     print(f"Collection: {collection_name}")
-    print(f"Target chunk size: {target_tokens} tokens\n")
+    print(f"Target chunk size: {target_tokens} tokens")
+    if device:
+        print(f"Device: {device}")
+    print()
 
     # Initialize chunker
     chunker = MarkdownChunker(target_tokens=target_tokens)
@@ -45,11 +49,13 @@ def build_database(
     if chunks:
         avg_tokens = sum(c.token_count for c in chunks) / len(chunks)
         print(f"Average chunk size: {avg_tokens:.1f} tokens")
-        print(f"Chunk size range: {min(c.token_count for c in chunks)} - {max(c.token_count for c in chunks)} tokens")
+        print(
+            f"Chunk size range: {min(c.token_count for c in chunks)} - {max(c.token_count for c in chunks)} tokens"
+        )
 
     # Initialize database
     print("\nInitializing database...")
-    db = Database(collection_name=collection_name)
+    db = Database(collection_name=collection_name, device=device)
     try:
         # Add chunks to database
         print("\nAdding chunks to database...")
@@ -57,7 +63,7 @@ def build_database(
 
         # Show collection info
         info = db.get_collection_info()
-        print(f"\nDatabase built successfully!")
+        print("\nDatabase built successfully!")
         print(f"Collection: {info['name']}")
         print(f"Points: {info['points_count']}")
         print(f"Vectors: {info['vectors_count']}")
@@ -67,12 +73,12 @@ def build_database(
 
 
 def test_search(
-    collection_name: str = "draw_steel_natural_language",
+    collection_name: str = "heroes-full-v1",
     query: str = "surprise round",
     limit: int = 5,
 ):
     """Test search functionality."""
-    print(f"\nTesting search...")
+    print("\nTesting search...")
     print(f"Query: {query}")
     print(f"Limit: {limit}\n")
 
@@ -84,7 +90,9 @@ def test_search(
         for i, result in enumerate(results, 1):
             print(f"Result {i} (score: {result['score']:.4f}):")
             print(f"  Page: {result['page']}")
-            print(f"  Section: {' > '.join(result['section']) if result['section'] else 'N/A'}")
+            print(
+                f"  Section: {' > '.join(result['section']) if result['section'] else 'N/A'}"
+            )
             print(f"  Tokens: {result['token_count']}")
             print(f"  Text: {result['text']}")
             print()
@@ -93,12 +101,12 @@ def test_search(
 
 
 def test_latency(
-    collection_name: str = "draw_steel_natural_language",
+    collection_name: str = "heroes-full-v1",
     query: str = "surprise round",
     num_runs: int = 10,
 ):
     """Test search latency."""
-    print(f"\nTesting search latency...")
+    print("\nTesting search latency...")
     print(f"Query: {query}")
     print(f"Runs: {num_runs}\n")
 
@@ -117,7 +125,7 @@ def test_latency(
 
 
 def interactive_search(
-    collection_name: str = "draw_steel_natural_language",
+    collection_name: str = "heroes-full-v1",
     limit: int = 5,
 ):
     """Interactive search loop."""
@@ -141,6 +149,7 @@ def interactive_search(
 
                 # Perform search and measure time
                 import time
+
                 start = time.time()
                 results = db.search(query=query, limit=limit)
                 elapsed = (time.time() - start) * 1000  # Convert to ms
@@ -149,9 +158,9 @@ def interactive_search(
                 print(f"\n[{elapsed:.1f}ms] Found {len(results)} results:\n")
                 for i, result in enumerate(results, 1):
                     print(f"{i}. (score: {result['score']:.4f})")
-                    if result['page']:
+                    if result["page"]:
                         print(f"   Page {result['page']}", end="")
-                    if result['section']:
+                    if result["section"]:
                         print(f" > {' > '.join(result['section'])}")
                     else:
                         print()
@@ -175,7 +184,9 @@ def main():
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
     # Build command
-    build_parser = subparsers.add_parser("build", help="Build database from markdown file")
+    build_parser = subparsers.add_parser(
+        "build", help="Build database from markdown file"
+    )
     build_parser.add_argument(
         "--markdown-file",
         type=Path,
@@ -185,8 +196,8 @@ def main():
     build_parser.add_argument(
         "--collection-name",
         type=str,
-        default="draw_steel_natural_language",
-        help="Name of Qdrant collection (default: draw_steel_natural_language)",
+        default="heroes-full-v1",
+        help="Name of Qdrant collection (default: heroes-full-v1)",
     )
     build_parser.add_argument(
         "--target-tokens",
@@ -200,14 +211,21 @@ def main():
         default=32,
         help="Batch size for embedding generation (default: 32)",
     )
+    build_parser.add_argument(
+        "--device",
+        type=str,
+        default=None,
+        help="Device to use for embeddings ('cpu', 'cuda', 'mps', or None for auto-detect). "
+        "Defaults to 'cpu' to avoid MPS memory issues on macOS.",
+    )
 
     # Search command
     search_parser = subparsers.add_parser("search", help="Test search functionality")
     search_parser.add_argument(
         "--collection-name",
         type=str,
-        default="draw_steel_natural_language",
-        help="Name of Qdrant collection (default: draw_steel_natural_language)",
+        default="heroes-full-v1",
+        help="Name of Qdrant collection (default: heroes-full-v1)",
     )
     search_parser.add_argument(
         "--query",
@@ -227,8 +245,8 @@ def main():
     latency_parser.add_argument(
         "--collection-name",
         type=str,
-        default="draw_steel_natural_language",
-        help="Name of Qdrant collection (default: draw_steel_natural_language)",
+        default="heroes-full-v1",
+        help="Name of Qdrant collection (default: heroes-full-v1)",
     )
     latency_parser.add_argument(
         "--query",
@@ -250,8 +268,8 @@ def main():
     interactive_parser.add_argument(
         "--collection-name",
         type=str,
-        default="draw_steel_natural_language",
-        help="Name of Qdrant collection (default: draw_steel_natural_language)",
+        default="heroes-full-v1",
+        help="Name of Qdrant collection (default: heroes-full-v1)",
     )
     interactive_parser.add_argument(
         "--limit",
@@ -268,6 +286,7 @@ def main():
             collection_name=args.collection_name,
             target_tokens=args.target_tokens,
             batch_size=args.batch_size,
+            device=args.device,
         )
     elif args.command == "search":
         test_search(
@@ -292,4 +311,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
