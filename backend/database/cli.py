@@ -8,6 +8,9 @@ import argparse
 from pathlib import Path
 from typing import Optional
 
+from rich.console import Console
+from rich.markdown import Markdown
+
 from backend.database.chunker import MarkdownChunker
 from backend.database.database import Database
 
@@ -129,6 +132,7 @@ def interactive_search(
     limit: int = 5,
 ):
     """Interactive search loop."""
+    console = Console()
     print("\n" + "=" * 80)
     print("Interactive Search Mode")
     print("=" * 80)
@@ -154,17 +158,32 @@ def interactive_search(
                 results = db.search(query=query, limit=limit)
                 elapsed = (time.time() - start) * 1000  # Convert to ms
 
-                # Display results immediately
+                # Display results with markdown rendering
                 print(f"\n[{elapsed:.1f}ms] Found {len(results)} results:\n")
                 for i, result in enumerate(results, 1):
-                    print(f"{i}. (score: {result['score']:.4f})")
+                    # Print metadata
+                    metadata_parts = [f"{i}. (score: {result['score']:.4f})"]
                     if result["page"]:
-                        print(f"   Page {result['page']}", end="")
+                        metadata_parts.append(f"Page {result['page']}")
                     if result["section"]:
-                        print(f" > {' > '.join(result['section'])}")
+                        section_str = (
+                            " > ".join(result["section"])
+                            if isinstance(result["section"], list)
+                            else str(result["section"])
+                        )
+                        metadata_parts.append(section_str)
+                    print(" | ".join(metadata_parts))
+
+                    # Render text as markdown if it looks like markdown, otherwise as plain text
+                    text = result["text"]
+                    has_markdown = any(
+                        markdown_pattern in text
+                        for markdown_pattern in ["#", "**", "*", "`", "[", "]", "```"]
+                    )
+                    if has_markdown:
+                        console.print(Markdown(text))
                     else:
-                        print()
-                    print(f"   {result['text']}")
+                        print(f"   {text}")
                     print()
 
             except KeyboardInterrupt:

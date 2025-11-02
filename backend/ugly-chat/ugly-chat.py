@@ -14,6 +14,8 @@ from typing import Optional
 
 from openai import OpenAI
 from qdrant_client import QdrantClient
+from rich.console import Console
+from rich.markdown import Markdown
 
 from backend.database.database import Database
 from backend.utils.keys import get_openrouter_api_key
@@ -106,6 +108,9 @@ def chat(
 
     # Initialize OpenAI client for OpenRouter
     client = OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
+
+    # Initialize Rich console for markdown rendering
+    console = Console()
 
     # Initialize database
     print(f"\nInitializing database with collection: {collection_name}...")
@@ -256,6 +261,17 @@ Cite page numbers and sections when referencing specific rules."""
                 llm_completion_time = time.time() - llm_start
 
                 print()  # New line after streaming
+
+                # Render markdown if response contains markdown-like content
+                if assistant_response.strip():
+                    # Check if response looks like markdown (has markdown syntax)
+                    has_markdown = any(
+                        markdown_pattern in assistant_response
+                        for markdown_pattern in ["#", "**", "*", "`", "[", "]", "```"]
+                    )
+                    if has_markdown:
+                        # Render formatted markdown version
+                        console.print(Markdown(assistant_response))
 
                 # Print latency breakdown
                 print("\n[Latency Breakdown]")
