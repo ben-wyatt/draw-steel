@@ -1,25 +1,23 @@
 """
-CLI chatbot that uses gpt-5-mini and the database for context-aware responses.
+CLI chatbot that uses RAG database for context-aware responses.
 
 Queries the database first, then sends the full conversation to LLM via OpenRouter.
 """
 
 import argparse
 import os
-import re
 import sys
 import time
 from pathlib import Path
 from typing import Optional
 
 from openai import OpenAI
-from qdrant_client import QdrantClient
 from rich.console import Console
 from rich.live import Live
 from rich.markdown import Markdown
 from rich.status import Status
 
-from backend.database.database import Database
+from backend.database.database import Database, list_collections
 from backend.utils.cost import calculate_cost, get_model_pricing
 from backend.utils.keys import get_openrouter_api_key
 
@@ -36,35 +34,6 @@ Respond in markdown formatting, using rich markdown syntax. only use - for lists
 IMPORTANT: Do NOT include citations, page numbers, or reference numbers in your responses.
 Do NOT use format like [1], [2], [3] or similar citation markers.
 Present information naturally without any citation markers."""
-
-
-def list_collections(db_path: Optional[str] = None) -> list[str]:
-    """
-    List all available collections in the database.
-
-    Args:
-        db_path: Optional path to database directory
-
-    Returns:
-        List of collection names
-    """
-    # Determine db path
-    if db_path is None:
-        repo_root = Path(__file__).parent.parent.parent
-        db_path_obj = repo_root / "backend" / "data" / "db_files"
-    else:
-        db_path_obj = Path(db_path)
-
-    qdrant_path = db_path_obj / "qdrant"
-
-    # Access Qdrant client directly without creating Database instance
-    client = QdrantClient(path=str(qdrant_path))
-    try:
-        collections = client.get_collections().collections
-        collection_names = [c.name for c in collections]
-        return collection_names
-    finally:
-        client.close()
 
 
 def format_context(results: list[dict]) -> str:
@@ -114,25 +83,20 @@ def chat(
         model: LLM model to use (default: google/gemini-2.5-flash-lite)
         db_path: Optional path to database directory
     """
-    # Check for API key
     api_key = get_openrouter_api_key()
     if not api_key:
         print("ERROR: OPENROUTER_API_KEY not found in environment or ~/.zshenv")
         sys.exit(1)
 
-    # Initialize OpenAI client for OpenRouter
     client = OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
 
-    # Initialize Rich console for markdown rendering
     console = Console()
 
-    # Initialize database
     print(f"\nInitializing database with collection: {collection_name}...")
     db_path_obj = Path(db_path) if db_path else None
     db = Database(collection_name=collection_name, db_path=db_path_obj)
 
     try:
-        # Verify collection exists and has data
         info = db.get_collection_info()
         print(f"Collection: {info['name']}")
         print(f"Points: {info['points_count']}")
@@ -155,7 +119,7 @@ def chat(
 
         while True:
             try:
-                # Get user query
+                # User Query
                 query = input("\nYou: ").strip()
 
                 if not query:
@@ -165,38 +129,26 @@ def chat(
                     print("\nExiting...")
                     break
 
-                # Search database for context
                 print("\n[Searching database...]")
                 db_start = time.time()
                 db_results = db.search(query=query, limit=top_k)
                 db_time = time.time() - db_start
 
-                # Format context
                 context = format_context(db_results)
-
-                # Build messages
                 messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-
-                # Add conversation history
                 messages.extend(conversation_history)
 
-                # Add context and current query
                 if context:
                     user_message = f"Relevant context from the rulebook:\n\n{context}\n\n---\n\nUser question: {query}"
                 else:
                     user_message = query
 
                 messages.append({"role": "user", "content": user_message})
-
-                # Update conversation history (keep last 10 exchanges)
                 conversation_history.append({"role": "user", "content": query})
                 if len(conversation_history) > 20:  # Keep last 10 user+assistant pairs
                     conversation_history = conversation_history[-20:]
 
-                # Stream response from LLM
                 assistant_response = ""
-
-                # Start streaming request
                 llm_start = time.time()
                 stream = client.chat.completions.create(
                     model=model,
@@ -204,43 +156,31 @@ def chat(
                     stream=True,
                 )
 
-                # Process stream
                 first_token_received = False
                 first_token_time = None
                 usage = None
 
                 # Use Rich status spinner while waiting for first token
                 with Status("[bold yellow]Thinking...", console=console):
-                    # Wait for first chunk with content
-                    for chunk in stream:
+                    for stream_chunk in stream:
                         # Check for usage information (usually in final chunk)
-                        if hasattr(chunk, "usage") and chunk.usage is not None:
-                            usage = chunk.usage
+                        if (
+                            hasattr(stream_chunk, "usage")
+                            and stream_chunk.usage is not None
+                        ):
+                            usage = stream_chunk.usage
 
                         # Check for content
-                        if chunk.choices and len(chunk.choices) > 0:
-                            delta = chunk.choices[0].delta
+                        if stream_chunk.choices and len(stream_chunk.choices) > 0:
+                            delta = stream_chunk.choices[0].delta
                             if hasattr(delta, "content") and delta.content is not None:
                                 if not first_token_received:
                                     first_token_time = time.time() - llm_start
                                     first_token_received = True
                                     assistant_response = delta.content
-                                    # Break out of status context to start streaming
                                     break
 
-                # Stream remaining chunks with Live markdown rendering
                 if first_token_received:
-                    # Helper function to remove citation markers (e.g., [1], [2], [3])
-                    # Only matches standalone citations, not markdown links like [text](url)
-                    def remove_citations(text: str) -> str:
-                        # Remove citations like [1], [2], [3] that appear at end of sentences/clauses
-                        # Pattern: whitespace + [digit(s)] at end of word/clause
-                        return re.sub(r"\s*\[\d+\](?=\s|$|[.,;:!?])", "", text)
-
-                    # Remove citations from first token
-                    assistant_response = remove_citations(assistant_response)
-
-                    # Always use markdown rendering since system prompt requests markdown formatting
                     console.print()  # New line before markdown
                     with Live(
                         Markdown(assistant_response),
@@ -249,36 +189,30 @@ def chat(
                         vertical_overflow="visible",
                     ) as live:
                         # Process remaining chunks
-                        for chunk in stream:
+                        for stream_chunk in stream:
                             # Check for usage information (usually in final chunk)
-                            if hasattr(chunk, "usage") and chunk.usage is not None:
-                                usage = chunk.usage
+                            if (
+                                hasattr(stream_chunk, "usage")
+                                and stream_chunk.usage is not None
+                            ):
+                                usage = stream_chunk.usage
 
                             # Check for content
-                            if chunk.choices and len(chunk.choices) > 0:
-                                delta = chunk.choices[0].delta
+                            if stream_chunk.choices and len(stream_chunk.choices) > 0:
+                                delta = stream_chunk.choices[0].delta
                                 if (
                                     hasattr(delta, "content")
                                     and delta.content is not None
                                 ):
                                     content = delta.content
-                                    # Remove citations from content as it streams
-                                    content = remove_citations(content)
                                     assistant_response += content
-                                    # Update Live display with current markdown
                                     live.update(Markdown(assistant_response))
                 else:
-                    # No tokens received
                     console.print("\nAssistant: (No response received)")
 
                 llm_completion_time = time.time() - llm_start
 
-                # Final cleanup: remove any remaining citations
-                assistant_response = re.sub(
-                    r"\s*\[\d+\](?=\s|$|[.,;:!?])", "", assistant_response
-                )
-
-                # Build concise latency breakdown
+                # Latency breakdown
                 parts = []
                 parts.append(f"db={db_time * 1000:.0f}ms")
                 if first_token_time is not None:
@@ -333,7 +267,7 @@ def select_collection_interactive(db_path: Optional[str] = None) -> Optional[str
     Returns:
         Selected collection name or None if cancelled
     """
-    collections = list_collections(db_path)
+    collections = list_collections(Path(db_path) if db_path else None)
 
     if not collections:
         print("No collections found in database.")
@@ -350,7 +284,7 @@ def select_collection_interactive(db_path: Optional[str] = None) -> Optional[str
             if not choice:
                 continue
 
-            # Try number first
+            # Attempt to parse for integer
             try:
                 idx = int(choice) - 1
                 if 0 <= idx < len(collections):
@@ -401,7 +335,6 @@ def main():
 
     args = parser.parse_args()
 
-    # Select collection if not provided
     collection_name = args.collection_name
     if collection_name is None:
         collection_name = select_collection_interactive(args.db_path)
@@ -409,7 +342,6 @@ def main():
             print("No collection selected. Exiting.")
             sys.exit(1)
 
-    # Start chat
     chat(
         collection_name=collection_name,
         top_k=args.top_k,
