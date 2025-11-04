@@ -4,7 +4,7 @@ contains core game mechanics data structures
 
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 Characteristic = Literal["might", "agility", "reason", "intuition", "presence"]
 ActionType = Literal["main action", "maneuver", "move action", "trigger action"]
@@ -109,32 +109,23 @@ class PowerRoll(BaseModel):
     tier_three: RollOutcome  # ≥17
 
 
-class Ability(BaseModel):
-    """Full ability statblock
+class MonsterAbility(BaseModel):
+    """Monster ability
     Example:
-
-    Rip and Tear: 2d10+2 damage;
-    charge, melee, strike, weapon;
-    main action; melee 1;
-    target: one creature or object
-    <11: 1 damage; push 1
-    11-16: 2 damage; push 2; m<0, prone
-    17+: 3 damage; push 2; m<2, prone
-    Soulsight: any creature within 2
-    squares of the frenzied can't be
-    hidden from them.
+     name: Rip and Tear
+     flavor_text: none
+     plus_roll_amount: 2
+     keywords: charge, melee, strike, weapon
+     resource_cost: 0 #in this case: malice
+     ActionType: main action
+     distance: melee 1
+     target: one creature or object
+     <=11: 1 damage; push 1
+     11-16: 2 damage; push 2; m<0, prone
+     17+: 3 damage; push 2; m<2, prone
+     effect: none
     """
 
-    name: str
-    description: Optional[str] = None
-    keywords: List[AbilityKeyword] = Field(default_factory=list)
-    action_type: ActionType
-    target: Target
-    power_roll: PowerRoll
-    effect: Optional[str] = None
-
-
-class MonsterAbility(BaseModel):
     name: str
     flavor_text: Optional[str] = None
     keywords: Optional[List[AbilityKeyword]] = None
