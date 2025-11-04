@@ -154,7 +154,6 @@ class MarkdownChunker:
         current_chunk_lines: List[str] = []
         current_page: Optional[int] = None
         current_section: List[str] = []  # Header hierarchy
-        chunk_index = 0
         page_chunk_index = 0
 
         i = 0

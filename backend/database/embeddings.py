@@ -4,7 +4,6 @@ Embedding generation using local HuggingFace model.
 Uses google/embeddinggemma-300m for fast local semantic embeddings.
 """
 
-import time
 from typing import List, Optional
 
 from sentence_transformers import SentenceTransformer
@@ -40,7 +39,7 @@ class EmbeddingModel:
     def _load_model(self):
         """Load the embedding model."""
         print(f"Loading embedding model: {self.model_name} on device: {self.device}...")
-        
+
         # Get HuggingFace token for gated models
         hf_token = get_hf_token()
         if hf_token:
@@ -56,7 +55,7 @@ class EmbeddingModel:
                 self.model_name,
                 device=self.device,
             )
-        
+
         print("Model loaded successfully.")
 
     def embed(self, texts: List[str], show_progress: bool = False) -> List[List[float]]:
@@ -103,4 +102,3 @@ class EmbeddingModel:
         # Get dimension by embedding a dummy text
         test_embedding = self.embed_single("test")
         return len(test_embedding)
-
