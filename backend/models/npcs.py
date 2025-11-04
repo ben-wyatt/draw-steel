@@ -1,48 +1,48 @@
-from enum import Enum
+from typing import Literal
 
-from models.primitives import DamageType, MonsterAbility, MovementType, Size, StatBlock
+from models.primitives import DamageType, MonsterAbility, MovementType, Size
 from pydantic import BaseModel
 
+MonsterKeyword = Literal[
+    "abyssal",
+    "accursed",
+    "animal",
+    "beast",
+    "construct",
+    "dragon",
+    "elemental",
+    "fey",
+    "giant",
+    "horror",
+    "humanoid",
+    "infernal",
+    "ooze",
+    "plant",
+    "swarm",
+    "undead",
+    "other",
+]
 
-class Keyword(str, Enum):
-    ABYSSAL = "abyssal"
-    ACCURSED = "accursed"
-    ANIMAL = "animal"
-    BEAST = "beast"
-    CONSTRUCT = "construct"
-    DRAGON = "dragon"
-    ELEMENTAL = "elemental"
-    FEY = "fey"
-    GIANT = "giant"
-    HORROR = "horror"
-    HUMANOID = "humanoid"
-    INFERNAL = "infernal"
-    OOZE = "ooze"
-    PLANT = "plant"
-    SWARM = "swarm"
-    UNDEAD = "undead"
-    OTHER = "other"
+CreatureOrganization = Literal[
+    "minion",
+    "horde",
+    "platoon",
+    "leader",
+    "elite",
+    "solo",
+]
 
-
-class CreatureOrganization(str, Enum):
-    MINION = "minion"
-    HORDE = "horde"
-    PLATOON = "platoon"
-    LEADER = "leader"
-    ELITE = "elite"
-    SOLO = "solo"
-
-
-class CreatureRole(str, Enum):
-    ABUSHER = "ambusher"
-    ARTILLERY = "artillery"
-    BRUTE = "brute"
-    CONTROLLER = "controller"
-    DEFENDER = "defender"
-    HARRYER = "harrier"
-    HEXER = "hexer"
-    MOUNT = "mount"
-    SUPPORT = "support"
+CreatureRole = Literal[
+    "ambusher",
+    "artillery",
+    "brute",
+    "controller",
+    "defender",
+    "harrier",
+    "hexer",
+    "mount",
+    "support",
+]
 
 
 # class MaliceFeature
@@ -56,7 +56,7 @@ class Trait(BaseModel):
 
 class Monster(BaseModel):
     name: str
-    keyword: Keyword
+    keyword: MonsterKeyword
     level: int
     org: CreatureOrganization
     role: CreatureRole
@@ -70,7 +70,7 @@ class Monster(BaseModel):
     immunities: list[DamageType] | None = None
     weaknesses: list[DamageType] | None = None
     movement: list[MovementType] | None = None
-    stats: StatBlock
+    # stats:
     signature_ability: MonsterAbility
     other_abilities: list[MonsterAbility] | None = None
     traits: list[Trait] | None = None
