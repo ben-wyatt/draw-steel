@@ -1,8 +1,7 @@
 from enum import Enum
 
+from models.primitives import DamageType, MonsterAbility, MovementType, Size, StatBlock
 from pydantic import BaseModel
-
-from models.primitives import Ability, DamageType, MovementType, Size, StatBlock
 
 
 class Keyword(str, Enum):
@@ -72,8 +71,8 @@ class Monster(BaseModel):
     weaknesses: list[DamageType] | None = None
     movement: list[MovementType] | None = None
     stats: StatBlock
-    signature_ability: Ability
-    other_abilities: list[Ability] | None = None
+    signature_ability: MonsterAbility
+    other_abilities: list[MonsterAbility] | None = None
     traits: list[Trait] | None = None
     # malice_features: list[MaliceFeature,None]
     # villain_actions: list[VillainAction,None]
