@@ -24,6 +24,35 @@ from backend.database.chunker import Chunk
 from backend.database.embeddings import EmbeddingModel
 
 
+def list_collections(db_path: Optional[Path] = None) -> List[str]:
+    """
+    List all available collections in the database.
+
+    Args:
+        db_path: Optional path to database directory (default: backend/data/db_files)
+
+    Returns:
+        List of collection names
+    """
+    # Determine db path
+    if db_path is None:
+        repo_root = Path(__file__).parent.parent.parent
+        db_path_obj = repo_root / "backend" / "data" / "db_files"
+    else:
+        db_path_obj = Path(db_path)
+
+    qdrant_path = db_path_obj / "qdrant"
+
+    # Access Qdrant client directly without creating Database instance
+    client = QdrantClient(path=str(qdrant_path))
+    try:
+        collections = client.get_collections().collections
+        collection_names = [c.name for c in collections]
+        return collection_names
+    finally:
+        client.close()
+
+
 class Database:
     """
     Qdrant database wrapper for storing and searching chunks.
@@ -71,7 +100,7 @@ class Database:
 
         # Create collection if it doesn't exist
         self._ensure_collection()
-        
+
         # Check if collection uses named vectors and store that info
         collection_info = self.client.get_collection(self.collection_name)
         vectors_config = collection_info.config.params.vectors
@@ -91,20 +120,25 @@ class Database:
                     distance=Distance.COSINE,
                 ),
             )
-            print(f"Collection '{self.collection_name}' created with dimension {self.embedding_dim}")
+            print(
+                f"Collection '{self.collection_name}' created with dimension {self.embedding_dim}"
+            )
         else:
             # Check if dimension matches
             collection_info = self.client.get_collection(self.collection_name)
             vectors_config = collection_info.config.params.vectors
-            
+
             # Handle both named vectors (dict) and single vector (VectorParams)
             if isinstance(vectors_config, dict):
                 # Named vectors - get first vector config
                 existing_dim = next(iter(vectors_config.values())).size
+            elif vectors_config is None:
+                # No vectors configured - treat as dimension mismatch
+                existing_dim = None
             else:
                 # Single unnamed vector
                 existing_dim = vectors_config.size
-                
+
             if existing_dim != self.embedding_dim:
                 print(
                     f"Collection '{self.collection_name}' exists with dimension {existing_dim}, "
@@ -118,7 +152,9 @@ class Database:
                         distance=Distance.COSINE,
                     ),
                 )
-                print(f"Collection '{self.collection_name}' recreated with dimension {self.embedding_dim}")
+                print(
+                    f"Collection '{self.collection_name}' recreated with dimension {self.embedding_dim}"
+                )
             else:
                 print(f"Using existing collection: {self.collection_name}")
 
@@ -139,7 +175,12 @@ class Database:
         texts = [chunk.text for chunk in chunks]
         all_embeddings = []
         num_batches = (len(texts) + batch_size - 1) // batch_size
-        for i in tqdm(range(0, len(texts), batch_size), desc="Generating embeddings", total=num_batches, unit="batch"):
+        for i in tqdm(
+            range(0, len(texts), batch_size),
+            desc="Generating embeddings",
+            total=num_batches,
+            unit="batch",
+        ):
             batch = texts[i : i + batch_size]
             embeddings = self.embedding_model.embed(batch, show_progress=False)
             all_embeddings.extend(embeddings)
@@ -207,10 +248,10 @@ class Database:
         # Perform semantic search
         # Handle both named vectors (dict) and unnamed vectors
         if self.uses_named_vectors:
-            # Collection uses named vectors like {"dense": ...}
+            # Collection uses named vectors - use tuple format (name, vector)
             results = self.client.search(
                 collection_name=self.collection_name,
-                query_vector={"dense": query_vector},
+                query_vector=("dense", query_vector),
                 query_filter=query_filter,
                 limit=limit,
             )
@@ -226,7 +267,7 @@ class Database:
         # Format results
         formatted_results = []
         for result in results:
-            payload = result.payload
+            payload = result.payload or {}
             formatted_results.append(
                 {
                     "text": payload.get("text", ""),
@@ -264,7 +305,7 @@ class Database:
             if self.uses_named_vectors:
                 self.client.search(
                     collection_name=self.collection_name,
-                    query_vector={"dense": query_vector},
+                    query_vector=("dense", query_vector),
                     limit=10,
                 )
             else:
@@ -291,17 +332,18 @@ class Database:
         """Get information about the collection."""
         collection_info = self.client.get_collection(self.collection_name)
         vectors_config = collection_info.config.params.vectors
-        
+
         # Handle both named vectors (dict) and single vector (VectorParams)
         if isinstance(vectors_config, dict):
-            # Named vectors - get first vector config
             vector_size = next(iter(vectors_config.values())).size
             distance = next(iter(vectors_config.values())).distance
+        elif vectors_config is None:
+            vector_size = None
+            distance = None
         else:
-            # Single unnamed vector
             vector_size = vectors_config.size
             distance = vectors_config.distance
-        
+
         return {
             "name": self.collection_name,
             "points_count": collection_info.points_count,
@@ -329,4 +371,3 @@ class Database:
     def __del__(self):
         """Cleanup when object is garbage collected."""
         self.close()
-
