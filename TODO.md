@@ -9,3 +9,4 @@
 - integrate abilities, classes, monster blocks, as data structures, then UI elements
 - image retrieval
 - second page: agentic search. LLM handles multiple calls to answer complex questions.
+- rewrite ugly-chat for less code-nesting (quality)
