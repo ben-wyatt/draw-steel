@@ -1,8 +1,5 @@
 data structure definitions
 
-The important structures are: 
-- `CharacterAbility`
-- `MonsterAbility`
 
 TODO:
 Eventually I'll connect things together via dictionaries:
@@ -16,8 +13,15 @@ Eventually I'll connect things together via dictionaries:
 - more tbd
 - fix Target: Two creatures or objects
 
+
+
+
+
 GPT-5 can create a monster stat block perfectly. I ran it on predator_A.
 But it also cost 3 cents for one image... Let's try mini and nano!
 
 Nano failed to make the power roll.
 Mini also failed to do power roll.
+Gemini 2.5 Flash Lite worked well! But structured outputs has a maximum allowed nesting depth
+sometimes it doesn't pass the parser. in that case, we should just rerun with max_tries
+

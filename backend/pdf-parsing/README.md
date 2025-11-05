@@ -18,7 +18,9 @@ Honestly this is super powerful. GPT-5-mini can perfectly OCR the text of the PD
 
 That makes me think that what we should be doing is going off of the classifiers: if a page has a specific class then it should be OCRed with a specific prompt for extraction.
 
-first thing required for this is to have really good classification done already.
+There's a bit of trouble in that the LLMs flat out reject very complex data models.  one way we can get around that is to flatten data structures by having things like RollOutcomes be printed as strings, then have separate LLM come in later and format that correctly.
+
+
 
 ### page-transcription
 

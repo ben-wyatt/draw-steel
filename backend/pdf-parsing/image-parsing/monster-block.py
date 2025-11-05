@@ -23,12 +23,16 @@ def encode_image(image_path: Path) -> str:
 def parse_monster_block(image_path: Path) -> Monster:
     image = encode_image(image_path)
     response = client.beta.chat.completions.parse(
+        # model="openai/gpt-5-mini",
         model="google/gemini-2.5-flash-lite",
         messages=[
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "Parse the monster block from the image."},
+                    {
+                        "type": "text",
+                        "text": "Parse the monster block from the image. Never infer information that is not explicitly stated in the page.",
+                    },
                     {
                         "type": "image_url",
                         "image_url": {"url": f"data:image/png;base64,{image}"},
@@ -45,6 +49,7 @@ def parse_monster_block(image_path: Path) -> Monster:
 
 
 if __name__ == "__main__":
-    image_path = Path("backend/data/monsters/abilities/other_images/predator_A.png")
+    image_path = Path("backend/data/monsters/page_images/page_0054.png")
     result = parse_monster_block(image_path)
-    print(result)
+    with open("monster_block_result.json", "w", encoding="utf-8") as f:
+        f.write(result.model_dump_json(indent=2))
