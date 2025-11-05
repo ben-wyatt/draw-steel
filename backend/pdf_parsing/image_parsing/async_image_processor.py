@@ -17,7 +17,6 @@ from openai import AsyncOpenAI
 from pydantic import BaseModel
 from tqdm.asyncio import tqdm
 
-from backend.models.primitives import MonstersPageClassification
 from backend.utils.keys import get_openrouter_api_key
 
 load_dotenv()
@@ -369,32 +368,3 @@ def json_dump(
 
     with open(output_path, "w") as f:
         json.dump(serializable_results, f, indent=2)
-
-
-if __name__ == "__main__":
-    results = asyncio.run(
-        process_images_async(
-            book="monsters",
-            model="google/gemini-2.5-flash-lite",
-            # model="google/gemini-2.5-flash-preview-09-2025",
-            system_prompt="""The following is a single page from the Monsters book. Count illustrations panels as contiguous artwork regions only. Analyze the page and extract the following information:
-            1. Detailed descriptions of the image or images on the book page. do not include banners or section headers as they are not images. Pages contain two rows of text, but are still one page. Do NOT split a single panel into multiple images just because the subject spans across columns.
-            2. Number of monster stat blocks present on the page. a monster stat block always starts with the name of the monster.
-            3. names of monster stat blocks present on the page. if there are no monster stat blocks, this should be None.
-            3. Whether there are partial monster stat blocks present on the page. this does not include malice features. 
-            4. Whether the page includes "Malice Features", as specifically described at the top of the description.
-            5. Whether the page includes multiple paragraphs of flavor text descriptions of monster lore.
-            7. Whether the page includes a table
-            8. whether the page includes a "Villain Action" section.
-            8. Whether the page is only an image, with no other text or information.
-            """,
-            response_model=MonstersPageClassification,
-            images_dir=Path("backend/data/monsters/page_images"),
-            max_concurrent=25,
-            max_retries=3,
-            best_of_n=2,
-            start_page=100,
-            end_page=102,
-        )
-    )
-    json_dump(results, "monsters_page_classification_test_save.json")
