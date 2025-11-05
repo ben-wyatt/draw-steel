@@ -52,9 +52,9 @@ async def _process_single_image(
     semaphore: asyncio.Semaphore,
     model: str,
     system_prompt: str,
-    response_model: Type[BaseModel],
+    response_model: Optional[Type[BaseModel]],
     max_retries: int,
-) -> Tuple[int, Union[BaseModel, ModelError]]:
+) -> Tuple[int, Union[BaseModel, ModelError, str]]:
     page_number = parse_page_number(image_path)
 
     async with semaphore:
@@ -80,18 +80,31 @@ async def _process_single_image(
         last_error = None
         for attempt in range(max_retries + 1):
             try:
-                # Call LLM with structured output
-                response = await client.beta.chat.completions.parse(
-                    model=model,
-                    messages=messages,
-                    response_format=response_model,
-                )
+                if response_model is not None:
+                    # Call LLM with structured output
+                    response = await client.beta.chat.completions.parse(
+                        model=model,
+                        messages=messages,
+                        response_format=response_model,
+                    )
 
-                parsed_result = response.choices[0].message.parsed
-                if parsed_result is None:
-                    raise ValueError("Failed to parse response from model")
+                    parsed_result = response.choices[0].message.parsed
+                    if parsed_result is None:
+                        raise ValueError("Failed to parse response from model")
 
-                return (page_number, parsed_result)
+                    return (page_number, parsed_result)
+                else:
+                    # Call LLM with plain text output
+                    response = await client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                    )
+
+                    text_content = response.choices[0].message.content
+                    if text_content is None:
+                        raise ValueError("Failed to get text content from model")
+
+                    return (page_number, text_content)
 
             except Exception as e:
                 last_error = e
@@ -123,10 +136,10 @@ async def _process_image_best_of_n(
     semaphore: asyncio.Semaphore,
     model: str,
     system_prompt: str,
-    response_model: Type[BaseModel],
+    response_model: Optional[Type[BaseModel]],
     max_retries: int,
     best_of_n: int,
-) -> Tuple[int, List[Union[BaseModel, ModelError]]]:
+) -> Tuple[int, List[Union[BaseModel, ModelError, str]]]:
     """
     Process a single image n times concurrently and return all results.
 
@@ -136,7 +149,7 @@ async def _process_image_best_of_n(
         semaphore: Semaphore to limit concurrent requests
         model: LLM model identifier
         system_prompt: System prompt to pass to the LLM
-        response_model: Pydantic model class for structured output
+        response_model: Optional Pydantic model class for structured output. If None, returns plain text.
         max_retries: Maximum number of retries per call
         best_of_n: Number of times to process the image
 
@@ -173,7 +186,7 @@ async def process_images_async(
     book: str,
     model: str,
     system_prompt: str,
-    response_model: Type[BaseModel],
+    response_model: Optional[Type[BaseModel]] = None,
     images_dir: Optional[Path] = None,
     max_concurrent: int = 10,
     max_retries: int = 3,
@@ -183,17 +196,17 @@ async def process_images_async(
     page_names: Optional[List[str]] = None,
     best_of_n: int = 1,
 ) -> Union[
-    List[Tuple[int, Union[BaseModel, ModelError]]],
-    List[Tuple[int, List[Union[BaseModel, ModelError]]]],
+    List[Tuple[int, Union[BaseModel, ModelError, str]]],
+    List[Tuple[int, List[Union[BaseModel, ModelError, str]]]],
 ]:
     """
-    Process page images asynchronously using LLM vision models with structured output.
+    Process page images asynchronously using LLM vision models with structured or plain text output.
 
     Args:
         book: Book type - "heroes" or "monsters"
         model: LLM model identifier (e.g., "openai/gpt-5-nano", "google/gemini-2.5-flash-lite")
         system_prompt: System prompt to pass to the LLM
-        response_model: Pydantic model class for structured output
+        response_model: Optional Pydantic model class for structured output. If None, returns plain text strings.
         images_dir: Optional explicit images directory path. If None, auto-detects from book.
         max_concurrent: Maximum number of concurrent requests (default: 10)
         max_retries: Maximum number of retries for parsing errors per LLM call (default: 3)
@@ -205,8 +218,8 @@ async def process_images_async(
                    processed n times concurrently and all results are returned.
 
     Returns:
-        When best_of_n == 1: List of tuples (page_number, parsed_model or ModelError) for each processed page.
-        When best_of_n > 1: List of tuples (page_number, list of n parsed_models or ModelErrors) for each processed page.
+        When best_of_n == 1: List of tuples (page_number, parsed_model/plain_text or ModelError) for each processed page.
+        When best_of_n > 1: List of tuples (page_number, list of n parsed_models/plain_text or ModelErrors) for each processed page.
 
     Raises:
         ValueError: If page_filter length doesn't match number of pages, or if no images found
@@ -335,8 +348,8 @@ async def process_images_async(
 
 def json_dump(
     results: Union[
-        List[Tuple[int, Union[BaseModel, ModelError]]],
-        List[Tuple[int, List[Union[BaseModel, ModelError]]]],
+        List[Tuple[int, Union[BaseModel, ModelError, str]]],
+        List[Tuple[int, List[Union[BaseModel, ModelError, str]]]],
     ],
     file_path: Union[str, Path],
 ) -> None:
@@ -350,21 +363,46 @@ def json_dump(
     output_path = Path(file_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    def serialize_item(item: Union[BaseModel, ModelError, str]) -> Union[dict, str]:
+        """Serialize a single result item."""
+        if isinstance(item, str):
+            return item
+        elif isinstance(item, (BaseModel, ModelError)):
+            return item.model_dump()
+        else:
+            # Fallback for unexpected types
+            return str(item)
+
     serializable_results = []
     for page_num, result in results:
         if isinstance(result, list):
-            # best_of_n > 1: result is List[Union[BaseModel, ModelError]]
+            # best_of_n > 1: result is List[Union[BaseModel, ModelError, str]]
             serializable_results.append(
                 {
                     "page_number": page_num,
-                    "data": [model.model_dump() for model in result],
+                    "data": [serialize_item(item) for item in result],
                 }
             )
         else:
-            # best_of_n == 1: result is Union[BaseModel, ModelError]
+            # best_of_n == 1: result is Union[BaseModel, ModelError, str]
             serializable_results.append(
-                {"page_number": page_num, "data": result.model_dump()}
+                {"page_number": page_num, "data": serialize_item(result)}
             )
 
     with open(output_path, "w") as f:
         json.dump(serializable_results, f, indent=2)
+
+
+# example usage:
+# if __name__ == "__main__":
+#     results = asyncio.run(
+#         process_images_async(
+#             book="heroes",
+#             model="google/gemini-2.5-flash-lite",
+#             system_prompt="Transcribe the page image to markdown format. Never infer information that is not explicitly stated in the page.",
+#             best_of_n=2,
+#             start_page=110,
+#             end_page=115,
+#         )
+#     )
+#     json_dump(results, "transcription_test.json")
