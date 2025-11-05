@@ -5,6 +5,9 @@
 - file cleanup
 - fastAPI backend: needs architecting
 - rewrite ugly-chat for less code-nesting (quality)
+- abilities code: is it actually usable?
+- update page_transcription to use async_image_processor
+- what to do with rules files: are they usefull still?
 
 
 ## data formatting 
