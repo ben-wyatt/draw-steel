@@ -43,7 +43,9 @@ ResourceType = Literal[
 ]
 AreaOfEffect = Literal["aura", "burst", "cube", "line", "wall"]
 Size = Literal["1T", "1S", "1M", "1L", "2", "3", "4", "5"]
-Target = Literal["creature", "object", "enemy", "ally", "self"]
+Target = Literal[
+    "creature", "object", "enemy", "ally", "self"
+]  # unused because of combinatorial explosion
 MovementType = Literal["climb", "swim", "fly", "hover", "burrow", "teleport"]
 StructuredEffect = Literal["pull", "push", "slide"]
 Condition = Literal[
@@ -146,6 +148,11 @@ class CharacterAbility(BaseModel):
     resource_type: Optional[ResourceType] = None
     action_type: ActionType
     distance: str
-    target: Target
+    target: str
     power_roll: Optional[PowerRoll] = None
     effect: Optional[str] = None
+
+
+class SimpleEffect(BaseModel):
+    name: str
+    description: str

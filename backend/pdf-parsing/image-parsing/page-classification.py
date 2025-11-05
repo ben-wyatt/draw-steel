@@ -323,7 +323,7 @@ async def main():
         "--images-dir",
         type=str,
         default=None,
-        help="Directory containing page images (default: backend/data/heroes/images relative to repo root)",
+        help="Directory containing page images (default: backend/data/heroes/page_images relative to repo root)",
     )
     parser.add_argument(
         "--max-concurrent",
@@ -339,7 +339,7 @@ async def main():
         images_dir = Path(args.images_dir)
     else:
         # Default to heroes images directory
-        images_dir = REPO_ROOT / "backend" / "data" / "heroes" / "images"
+        images_dir = REPO_ROOT / "backend" / "data" / "heroes" / "page_images"
 
     if not images_dir.exists():
         print(f"ERROR: Images directory not found: {images_dir}")

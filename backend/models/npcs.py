@@ -1,7 +1,8 @@
 from typing import Literal
 
-from models.primitives import DamageType, MonsterAbility, MovementType, Size
 from pydantic import BaseModel
+
+from backend.models.primitives import DamageType, MonsterAbility, MovementType, Size
 
 MonsterKeyword = Literal[
     "abyssal",
@@ -60,7 +61,7 @@ class Monster(BaseModel):
     level: int
     org: CreatureOrganization
     role: CreatureRole
-    ev: str
+    ev: int
 
     size: Size
     speed: int
