@@ -2,7 +2,7 @@
 contains core game mechanics data structures
 """
 
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -139,15 +139,3 @@ class StatBlock(BaseModel):
 class SimpleEffect(BaseModel):
     name: str
     description: str
-
-
-class MonstersPageClassification(BaseModel):
-    detailed_image_descriptions: list[str]
-    number_of_monster_stat_blocks: int
-    names_of_monster_stat_blocks: Optional[list[str]]
-    has_partial_monster_stat_blocks: bool
-    includes_malice_features: bool
-    includes_flavor_text: bool
-    includes_table: bool
-    includes_villain_action: bool
-    page_is_only_image: bool
