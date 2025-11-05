@@ -10,12 +10,11 @@ import base64
 import json
 import re
 from pathlib import Path
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Tuple, Type, Union
 
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from pydantic import BaseModel
-from pydantic_core._pydantic_core import ValidationError
 from tqdm.asyncio import tqdm
 
 from backend.models.primitives import MonstersPageClassification
@@ -25,6 +24,13 @@ load_dotenv()
 
 SCRIPT_DIR = Path(__file__).parent
 REPO_ROOT = SCRIPT_DIR.parent.parent.parent
+
+
+class ModelError(BaseModel):
+    """Error result when parsing fails after all retries."""
+
+    page_number: int
+    error_message: str
 
 
 def encode_image(image_path: Path) -> str:
@@ -49,7 +55,7 @@ async def _process_single_image(
     system_prompt: str,
     response_model: Type[BaseModel],
     max_retries: int,
-) -> Tuple[int, BaseModel]:
+) -> Tuple[int, Union[BaseModel, ModelError]]:
     page_number = parse_page_number(image_path)
 
     async with semaphore:
@@ -71,7 +77,7 @@ async def _process_single_image(
             },
         ]
 
-        # Retry loop for ValidationError
+        # Retry loop
         last_error = None
         for attempt in range(max_retries + 1):
             try:
@@ -88,69 +94,80 @@ async def _process_single_image(
 
                 return (page_number, parsed_result)
 
-            except ValidationError as e:
+            except Exception as e:
                 last_error = e
                 if attempt < max_retries:
                     print(
-                        f"  ValidationError on page {page_number}, attempt {attempt + 1}/{max_retries + 1}, retrying..."
+                        f"  Error on page {page_number}, attempt {attempt + 1}/{max_retries + 1}, retrying..."
                     )
                     continue
                 else:
-                    # All retries exhausted, fall through to error handling
+                    # All retries exhausted
                     print(
-                        f"  ValidationError on page {page_number} after {max_retries + 1} attempts, creating error result"
+                        f"  Error on page {page_number} after {max_retries + 1} attempts: {last_error}"
                     )
                     break
-            except Exception as e:
-                # Non-ValidationError exceptions go directly to error handling
-                last_error = e
-                break
 
-        # Error handling (for ValidationError after retries or other exceptions)
-        # last_error should always be set here since we only reach this point via exception paths
-        if last_error is None:
-            last_error = ValueError("Unknown error occurred during processing")
+        # Return ModelError if all retries failed
+        return (
+            page_number,
+            ModelError(
+                page_number=page_number,
+                error_message=str(last_error) if last_error else "Unknown error",
+            ),
+        )
 
-        print(f"  Error processing page {page_number}: {last_error}")
-        # Create an error result using the response model
-        # Try to create a minimal valid instance with error information
-        error_dict = {}
-        for field_name, field_info in response_model.model_fields.items():
-            if field_info.is_required() and field_info.default is None:
-                # For required fields without defaults, provide sensible defaults
-                field_type_str = str(field_info.annotation).lower()
-                if "list" in field_type_str or "List" in str(field_info.annotation):
-                    error_dict[field_name] = []
-                elif "str" in field_type_str or "string" in field_type_str:
-                    error_dict[field_name] = (
-                        f"Error during processing: {str(last_error)}"
-                    )
-                elif "int" in field_type_str or "float" in field_type_str:
-                    error_dict[field_name] = 0
-                elif "bool" in field_type_str:
-                    error_dict[field_name] = False
-                else:
-                    # For other types, try to use default or None
-                    error_dict[field_name] = (
-                        field_info.default
-                        if field_info.default is not None
-                        else f"Error: {str(last_error)}"
-                    )
-            elif field_info.default is not None:
-                error_dict[field_name] = field_info.default
 
-        try:
-            error_result = response_model(**error_dict)
-        except Exception as create_error:
-            # If we still can't create the model, try with minimal fields
-            # This is a fallback - some models might still fail
-            print(
-                f"  Warning: Could not create error instance for page {page_number}: {create_error}"
-            )
-            # Re-raise the original error since we can't create a valid result
-            raise last_error
+async def _process_image_best_of_n(
+    client: AsyncOpenAI,
+    image_path: Path,
+    semaphore: asyncio.Semaphore,
+    model: str,
+    system_prompt: str,
+    response_model: Type[BaseModel],
+    max_retries: int,
+    best_of_n: int,
+) -> Tuple[int, List[Union[BaseModel, ModelError]]]:
+    """
+    Process a single image n times concurrently and return all results.
 
-        return (page_number, error_result)
+    Args:
+        client: AsyncOpenAI client instance
+        image_path: Path to the image file
+        semaphore: Semaphore to limit concurrent requests
+        model: LLM model identifier
+        system_prompt: System prompt to pass to the LLM
+        response_model: Pydantic model class for structured output
+        max_retries: Maximum number of retries per call
+        best_of_n: Number of times to process the image
+
+    Returns:
+        Tuple of (page_number, list of n results)
+    """
+    page_number = parse_page_number(image_path)
+
+    # Create n concurrent tasks for the same image
+    tasks = [
+        _process_single_image(
+            client,
+            image_path,
+            semaphore,
+            model,
+            system_prompt,
+            response_model,
+            max_retries,
+        )
+        for _ in range(best_of_n)
+    ]
+
+    # Wait for all n calls to complete
+    results = await asyncio.gather(*tasks)
+
+    # Extract just the results (all should have same page_number)
+    page_number, _ = results[0]  # Get page_number from first result
+    models = [model for _, model in results]
+
+    return (page_number, models)
 
 
 async def process_images_async(
@@ -165,7 +182,11 @@ async def process_images_async(
     end_page: Optional[int] = None,
     page_filter: Optional[List[bool]] = None,
     page_names: Optional[List[str]] = None,
-) -> List[Tuple[int, BaseModel]]:
+    best_of_n: int = 1,
+) -> Union[
+    List[Tuple[int, Union[BaseModel, ModelError]]],
+    List[Tuple[int, List[Union[BaseModel, ModelError]]]],
+]:
     """
     Process page images asynchronously using LLM vision models with structured output.
 
@@ -176,14 +197,17 @@ async def process_images_async(
         response_model: Pydantic model class for structured output
         images_dir: Optional explicit images directory path. If None, auto-detects from book.
         max_concurrent: Maximum number of concurrent requests (default: 10)
-        max_retries: Maximum number of retries for ValidationError (default: 3)
+        max_retries: Maximum number of retries for parsing errors per LLM call (default: 3)
         start_page: Optional start page number for range filtering (inclusive)
         end_page: Optional end page number for range filtering (inclusive)
         page_filter: Optional boolean list of length num_pages to filter pages by index
         page_names: Optional list of page filenames to process (e.g., ["page_0266.png"])
+        best_of_n: Number of times to process each page (default: 1). When > 1, each page is
+                   processed n times concurrently and all results are returned.
 
     Returns:
-        List of tuples (page_number, parsed_model) for each processed page
+        When best_of_n == 1: List of tuples (page_number, parsed_model or ModelError) for each processed page.
+        When best_of_n > 1: List of tuples (page_number, list of n parsed_models or ModelErrors) for each processed page.
 
     Raises:
         ValueError: If page_filter length doesn't match number of pages, or if no images found
@@ -266,20 +290,39 @@ async def process_images_async(
         semaphore = asyncio.Semaphore(max_concurrent)
 
         # Process images concurrently with progress bar
-        tasks = [
-            _process_single_image(
-                client,
-                image_path,
-                semaphore,
-                model,
-                system_prompt,
-                response_model,
-                max_retries,
-            )
-            for image_path in filtered_images
-        ]
+        if best_of_n > 1:
+            # Use best-of-n wrapper for each image
+            tasks = [
+                _process_image_best_of_n(
+                    client,
+                    image_path,
+                    semaphore,
+                    model,
+                    system_prompt,
+                    response_model,
+                    max_retries,
+                    best_of_n,
+                )
+                for image_path in filtered_images
+            ]
+        else:
+            # Use direct single-image processing (backward compatible)
+            tasks = [
+                _process_single_image(
+                    client,
+                    image_path,
+                    semaphore,
+                    model,
+                    system_prompt,
+                    response_model,
+                    max_retries,
+                )
+                for image_path in filtered_images
+            ]
 
         # Use tqdm to show progress
+        # Note: tqdm.gather tracks high-level task completion (pages), not individual LLM calls
+        # When best_of_n > 1, each task internally makes best_of_n LLM calls
         results = await tqdm.gather(
             *tasks, desc=f"Processing {book} pages", total=len(tasks)
         )
@@ -291,12 +334,49 @@ async def process_images_async(
         await client.close()
 
 
+def json_dump(
+    results: Union[
+        List[Tuple[int, Union[BaseModel, ModelError]]],
+        List[Tuple[int, List[Union[BaseModel, ModelError]]]],
+    ],
+    file_path: Union[str, Path],
+) -> None:
+    """
+    Serialize and save the results from process_images_async to a JSON file.
+
+    Args:
+        results: Results from process_images_async (handles both best_of_n==1 and best_of_n>1)
+        file_path: Full path (str or Path) to the output JSON file, including filename
+    """
+    output_path = Path(file_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    serializable_results = []
+    for page_num, result in results:
+        if isinstance(result, list):
+            # best_of_n > 1: result is List[Union[BaseModel, ModelError]]
+            serializable_results.append(
+                {
+                    "page_number": page_num,
+                    "data": [model.model_dump() for model in result],
+                }
+            )
+        else:
+            # best_of_n == 1: result is Union[BaseModel, ModelError]
+            serializable_results.append(
+                {"page_number": page_num, "data": result.model_dump()}
+            )
+
+    with open(output_path, "w") as f:
+        json.dump(serializable_results, f, indent=2)
+
+
 if __name__ == "__main__":
     results = asyncio.run(
         process_images_async(
             book="monsters",
-            # model="google/gemini-2.5-flash-lite",
-            model="google/gemini-2.5-flash-preview-09-2025",
+            model="google/gemini-2.5-flash-lite",
+            # model="google/gemini-2.5-flash-preview-09-2025",
             system_prompt="""The following is a single page from the Monsters book. Count illustrations panels as contiguous artwork regions only. Analyze the page and extract the following information:
             1. Detailed descriptions of the image or images on the book page. do not include banners or section headers as they are not images. Pages contain two rows of text, but are still one page. Do NOT split a single panel into multiple images just because the subject spans across columns.
             2. Number of monster stat blocks present on the page. a monster stat block always starts with the name of the monster.
@@ -312,14 +392,9 @@ if __name__ == "__main__":
             images_dir=Path("backend/data/monsters/page_images"),
             max_concurrent=25,
             max_retries=3,
-            start_page=50,
-            end_page=75,
+            best_of_n=2,
+            start_page=100,
+            end_page=102,
         )
     )
-    # Convert results to JSON-serializable format
-    serializable_results = [
-        {"page_number": page_num, "data": model.model_dump()}
-        for page_num, model in results
-    ]
-    with open("monsters_page_classification.json", "w") as f:
-        json.dump(serializable_results, f, indent=2)
+    json_dump(results, "monsters_page_classification_test_save.json")
