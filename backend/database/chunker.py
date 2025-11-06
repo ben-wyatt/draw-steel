@@ -1,16 +1,13 @@
 """
-Markdown chunker that respects document structure.
+Use my own brain to figure out the chunking.
 
-Chunks markdown files intelligently, preserving paragraph boundaries,
-keeping related content together, and tracking page numbers and section headers.
 """
 
+import json
 import re
+import uuid
 from dataclasses import dataclass
-from pathlib import Path
 from typing import List, Optional
-
-import tiktoken
 
 
 @dataclass
@@ -19,307 +16,167 @@ class Chunk:
 
     text: str
     page: Optional[int]
-    source: str
-    section: List[str]  # Header hierarchy
-    chunk_index: int
-    token_count: int
+    source_book: str
+    chunk_id: str
+    ability_blocks: List[dict]
+    monster_blocks: List[dict]
+    item_blocks: List[dict]
+    other_blocks: List[dict]
+    section: Optional[List[str]] = None
+    chunk_index: int = 0
+    token_count: int = 0
 
 
-class MarkdownChunker:
+def construct_chunk(
+    text: str,
+    page: int,
+    source_book: str,
+    section: Optional[List[str]] = None,
+    chunk_index: int = 0,
+) -> Chunk:
     """
-    Intelligently chunks markdown files respecting document structure.
+    Construct a Chunk from text with metadata.
 
-    Chunking strategy:
-    - Target size: ~500-800 tokens (configurable)
-    - Never break within paragraphs, lists, or tables
-    - Prefer breaking at headers (##, ###)
-    - Keep related content together (e.g., Benefit/Drawback pairs)
-    - Preserve markdown formatting
+    Args:
+        text: The chunk text content
+        page: Page number
+        source_book: Source book identifier
+        section: Optional list of section headers (hierarchy)
+        chunk_index: Index of chunk within page
     """
+    matches = re.findall(r"\[\[([^|\]]+)\|([^\]]+)\]\]", text)
+    ability_blocks = [match[0] for match in matches if match[1].lower() == "ability"]
+    monster_blocks = [
+        match[0] for match in matches if match[1].lower() == "monster_block"
+    ]
+    item_blocks = [match[0] for match in matches if match[1].lower() == "item"]
+    other_blocks = [
+        match
+        for match in matches
+        if match[1].lower() != "ability"
+        and match[1].lower() != "monster_block"
+        and match[1].lower() != "item"
+    ]
 
-    def __init__(
-        self,
-        target_tokens: int = 600,
-        min_tokens: int = 200,
-        max_tokens: int = 1000,
-        encoding_name: str = "cl100k_base",
-    ):
-        """
-        Initialize chunker.
+    # Estimate token count: roughly 4 characters per token
+    token_count = len(text) // 4
 
-        Args:
-            target_tokens: Target chunk size in tokens
-            min_tokens: Minimum chunk size (only break if exceeded)
-            max_tokens: Maximum chunk size (force break if exceeded)
-            encoding_name: Tiktoken encoding to use
-        """
-        self.target_tokens = target_tokens
-        self.min_tokens = min_tokens
-        self.max_tokens = max_tokens
-        self.encoding = tiktoken.get_encoding(encoding_name)
+    # Extract section headers from markdown headers in text
+    if section is None:
+        section = []
+        lines = text.split("\n")
+        for line in lines:
+            line_stripped = line.strip()
+            if line_stripped.startswith("#"):
+                # Count # to determine header level and extract text
+                level = 0
+                for char in line_stripped:
+                    if char == "#":
+                        level += 1
+                    else:
+                        break
+                header_text = line_stripped[level:].strip()
+                if header_text:
+                    # Update section to reflect current level
+                    section = section[: level - 1] + [header_text]
 
-    def count_tokens(self, text: str) -> int:
-        """Count tokens in text."""
-        return len(self.encoding.encode(text))
+    chunk_id = str(uuid.uuid4())
+    chunk = Chunk(
+        text=text,
+        page=page,
+        source_book=source_book,
+        chunk_id=chunk_id,
+        ability_blocks=ability_blocks,
+        monster_blocks=monster_blocks,
+        item_blocks=item_blocks,
+        other_blocks=other_blocks,
+        section=section,
+        chunk_index=chunk_index,
+        token_count=token_count,
+    )
+    return chunk
 
-    def parse_page_marker(self, line: str) -> Optional[int]:
-        """Extract page number from [[Begin Page N]] marker."""
-        match = re.match(r"\[\[Begin Page (\d+)\]\]", line.strip())
-        if match:
-            return int(match.group(1))
-        return None
 
-    def is_header(self, line: str) -> tuple[bool, int, str]:
-        """
-        Check if line is a header and return level and text.
+#######
+# chunking using JSON dump
+def chunk_json_dump(
+    json_dump: List[dict], source_book: str, min_char_len: int = 1000
+) -> List[Chunk]:
+    """
+    Converts OCR'ed page transcriptions into chunks.
+    1. Remove pages that are full images.
+    2. Split by header
+    3. Concatenate smaller chunks until char_len > min_char_len
+    """
+    # check if chunk is just !!Image only!!, if so remove it
+    json_dump = [page for page in json_dump if page["data"] != "!!Image only!!"]
 
-        Returns:
-            (is_header, level, text) where level is 1-6, text is header text
-        """
-        line = line.rstrip()
-        match = re.match(r"^(#{1,6})\s+(.+)$", line)
-        if match:
-            level = len(match.group(1))
-            text = match.group(2).strip()
-            return True, level, text
-        return False, 0, ""
+    # split by header
+    filtered_dump = []
+    current_chunk = ""
+    current_page = json_dump[0]["page_number"]
+    for page_transcription in json_dump:
+        lines = page_transcription["data"].split("\n")
+        for line in lines:
+            if line.startswith("#"):
+                filtered_dump.append(
+                    {"page_number": current_page, "data": current_chunk}
+                )
+                current_chunk = ""
+                current_page = page_transcription["page_number"]
+            current_chunk += line + "\n"
+        filtered_dump.append({"page_number": current_page, "data": current_chunk})
 
-    def is_list_item(self, line: str) -> bool:
-        """Check if line is a list item."""
-        stripped = line.strip()
-        return bool(re.match(r"^[-*+]\s+", stripped)) or bool(
-            re.match(r"^\d+\.\s+", stripped)
-        )
-
-    def is_table_row(self, line: str) -> bool:
-        """Check if line is a table row."""
-        stripped = line.strip()
-        return bool(re.match(r"^\|.+\|$", stripped))
-
-    def is_empty(self, line: str) -> bool:
-        """Check if line is empty or whitespace."""
-        return not line.strip()
-
-    def should_keep_together(self, prev_lines: List[str], next_line: str) -> bool:
-        """
-        Determine if next_line should be kept with previous lines.
-
-        Keeps together:
-        - Benefit/Drawback pairs
-        - List items in same list
-        - Table rows
-        - Paragraphs that are part of same section
-        """
-        if not prev_lines:
-            return False
-
-        # Check if previous block ends with Benefit: or Drawback:
-        last_line = prev_lines[-1].strip()
-        if last_line.startswith("**Benefit:**") or last_line.startswith(
-            "**Drawback:**"
-        ):
-            # Keep next line if it's a continuation or related content
-            next_stripped = next_line.strip()
-            if (
-                not self.is_header(next_line)
-                and not self.is_empty(next_line)
-                and not next_stripped.startswith("**Benefit:**")
-                and not next_stripped.startswith("**Drawback:**")
-            ):
-                return True
-
-        # Keep list items together
-        if self.is_list_item(prev_lines[-1]) and self.is_list_item(next_line):
-            return True
-
-        # Keep table rows together
-        if self.is_table_row(prev_lines[-1]) and self.is_table_row(next_line):
-            return True
-
-        return False
-
-    def chunk_markdown(self, markdown_text: str, source: str = "") -> List[Chunk]:
-        """
-        Chunk markdown text respecting structure.
-
-        Args:
-            markdown_text: Full markdown text to chunk
-            source: Source file path or identifier
-
-        Returns:
-            List of Chunk objects
-        """
-        lines = markdown_text.split("\n")
-        chunks: List[Chunk] = []
-        current_chunk_lines: List[str] = []
-        current_page: Optional[int] = None
-        current_section: List[str] = []  # Header hierarchy
-        page_chunk_index = 0
-
-        i = 0
-        while i < len(lines):
-            line = lines[i]
-
-            # Check for page marker
-            page_num = self.parse_page_marker(line)
-            if page_num is not None:
-                # Save current chunk if it has content
-                if current_chunk_lines:
-                    chunk_text = "\n".join(current_chunk_lines).strip()
-                    if chunk_text:
-                        token_count = self.count_tokens(chunk_text)
-                        chunks.append(
-                            Chunk(
-                                text=chunk_text,
-                                page=current_page,
-                                source=source,
-                                section=current_section.copy(),
-                                chunk_index=page_chunk_index,
-                                token_count=token_count,
-                            )
-                        )
-                        page_chunk_index += 1
-                    current_chunk_lines = []
-
-                current_page = page_num
-                page_chunk_index = 0
-                i += 1
-                continue
-
-            # Check for header
-            is_header, header_level, header_text = self.is_header(line)
-            if is_header:
-                # Check if we should break before this header
-                if current_chunk_lines:
-                    chunk_text = "\n".join(current_chunk_lines).strip()
-                    token_count = self.count_tokens(chunk_text)
-
-                    # If current chunk is large enough, break before header
-                    if token_count >= self.min_tokens:
-                        chunks.append(
-                            Chunk(
-                                text=chunk_text,
-                                page=current_page,
-                                source=source,
-                                section=current_section.copy(),
-                                chunk_index=page_chunk_index,
-                                token_count=token_count,
-                            )
-                        )
-                        page_chunk_index += 1
-                        current_chunk_lines = []
-
-                # Update section hierarchy
-                # Truncate to current level, then add new header
-                current_section = current_section[: header_level - 1]
-                current_section.append(header_text)
-
-            # Add line to current chunk
-            current_chunk_lines.append(line)
-
-            # Check if we need to break
-            chunk_text = "\n".join(current_chunk_lines).strip()
-            token_count = self.count_tokens(chunk_text)
-
-            # Force break if exceeds max_tokens
-            if token_count > self.max_tokens:
-                # Try to break at a good point
-                # Find last header or paragraph boundary
-                break_point = len(current_chunk_lines)
-                for j in range(len(current_chunk_lines) - 1, 0, -1):
-                    test_chunk = "\n".join(current_chunk_lines[:j]).strip()
-                    test_tokens = self.count_tokens(test_chunk)
-                    if test_tokens >= self.min_tokens:
-                        # Check if this is a good break point
-                        if j < len(current_chunk_lines) - 1:
-                            # Check if next line is header or empty
-                            next_line = (
-                                current_chunk_lines[j]
-                                if j < len(current_chunk_lines)
-                                else ""
-                            )
-                            if self.is_empty(next_line) or self.is_header(next_line):
-                                break_point = j
-                                break
-
-                # Extract chunk up to break point
-                chunk_text = "\n".join(current_chunk_lines[:break_point]).strip()
-                if chunk_text:
-                    token_count = self.count_tokens(chunk_text)
-                    chunks.append(
-                        Chunk(
-                            text=chunk_text,
-                            page=current_page,
-                            source=source,
-                            section=current_section.copy(),
-                            chunk_index=page_chunk_index,
-                            token_count=token_count,
-                        )
-                    )
-                    page_chunk_index += 1
-
-                # Keep remaining lines
-                current_chunk_lines = current_chunk_lines[break_point:]
-                # Skip empty lines at start
-                while current_chunk_lines and self.is_empty(current_chunk_lines[0]):
-                    current_chunk_lines.pop(0)
-
-            # Check if we should break after this line
-            elif token_count >= self.target_tokens:
-                # Look ahead to see if next line is a good break point
-                if i + 1 < len(lines):
-                    next_line = lines[i + 1]
-                    # Break if next line is header or empty (end of paragraph)
-                    if self.is_header(next_line) or self.is_empty(next_line):
-                        # Don't break if we should keep together
-                        if not self.should_keep_together(
-                            current_chunk_lines, next_line
-                        ):
-                            chunks.append(
-                                Chunk(
-                                    text=chunk_text,
-                                    page=current_page,
-                                    source=source,
-                                    section=current_section.copy(),
-                                    chunk_index=page_chunk_index,
-                                    token_count=token_count,
-                                )
-                            )
-                            page_chunk_index += 1
-                            current_chunk_lines = []
-
+    # concatenate smaller chunks
+    i = 0
+    while i < len(filtered_dump) - 1:
+        if len(filtered_dump[i]["data"]) < min_char_len:
+            filtered_dump[i]["data"] += filtered_dump[i + 1]["data"]
+            filtered_dump.pop(i + 1)
+        else:
             i += 1
 
-        # Add final chunk
-        if current_chunk_lines:
-            chunk_text = "\n".join(current_chunk_lines).strip()
-            if chunk_text:
-                token_count = self.count_tokens(chunk_text)
-                chunks.append(
-                    Chunk(
-                        text=chunk_text,
-                        page=current_page,
-                        source=source,
-                        section=current_section.copy(),
-                        chunk_index=page_chunk_index,
-                        token_count=token_count,
-                    )
-                )
+    # convert to Chunk objects
+    chunks = []
+    chunk_indices_by_page = {}
+    for page_data in filtered_dump:
+        page_num = page_data["page_number"]
+        if page_num not in chunk_indices_by_page:
+            chunk_indices_by_page[page_num] = 0
+        else:
+            chunk_indices_by_page[page_num] += 1
 
-        return chunks
+        chunk = construct_chunk(
+            text=page_data["data"],
+            page=page_num,
+            source_book=source_book,
+            chunk_index=chunk_indices_by_page[page_num],
+        )
+        chunks.append(chunk)
 
-    def chunk_file(self, file_path: Path) -> List[Chunk]:
-        """
-        Chunk a markdown file.
+    return chunks
 
-        Args:
-            file_path: Path to markdown file
 
-        Returns:
-            List of Chunk objects
-        """
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read()
+if __name__ == "__main__":
+    # new gemini flash preview transcription
+    data_dump = json.load(
+        open(
+            "backend/data/heroes/natural_language/heroes_transcription_flash_preview.json"
+        )
+    )
+    # chunks = [page["data"] for page in data_dump]
+    # print("Chunking by header...")
+    # chunks = header_aggregate(chunks)
+    # analyze_chunks(chunks)
+    # loop_through_sequential_chunks(chunks)
+    chunks = chunk_json_dump(data_dump, source_book="heroes", min_char_len=2000)
+    from backend.database.chunk_inspector import analyze_chunks
 
-        source = str(file_path)
-        return self.chunk_markdown(content, source=source)
+    analyze_chunks(chunks)
+
+
+"""
+TODO:
+ - extract ability metadata: [[Name|type]] regex match, page number
+
+"""

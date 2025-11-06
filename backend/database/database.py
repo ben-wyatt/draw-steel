@@ -4,8 +4,8 @@ Qdrant database wrapper for hybrid semantic and lexical search.
 Provides fast local vector database with typo tolerance and fuzzy matching.
 """
 
+import json
 import time
-import uuid
 from pathlib import Path
 from typing import List, Optional
 
@@ -20,7 +20,7 @@ from qdrant_client.models import (
 )
 from tqdm import tqdm
 
-from backend.database.chunker import Chunk
+from backend.database.chunker import Chunk, chunk_json_dump
 from backend.database.embeddings import EmbeddingModel
 
 
@@ -188,7 +188,12 @@ class Database:
         # Prepare points for Qdrant
         points = []
         for chunk, embedding in zip(chunks, all_embeddings):
-            point_id = str(uuid.uuid4())
+            # Use chunk.chunk_id as the point ID
+            point_id = chunk.chunk_id
+
+            # Ensure section is a list (can be None)
+            section = chunk.section if chunk.section is not None else []
+
             points.append(
                 PointStruct(
                     id=point_id,
@@ -196,10 +201,15 @@ class Database:
                     payload={
                         "text": chunk.text,
                         "page": chunk.page,
-                        "source": chunk.source,
-                        "section": chunk.section,
+                        "source_book": chunk.source_book,
+                        "section": section,
                         "chunk_index": chunk.chunk_index,
                         "token_count": chunk.token_count,
+                        # Store block metadata
+                        "ability_blocks": chunk.ability_blocks,
+                        "monster_blocks": chunk.monster_blocks,
+                        "item_blocks": chunk.item_blocks,
+                        "other_blocks": chunk.other_blocks,
                     },
                 )
             )
@@ -207,6 +217,45 @@ class Database:
         # Upload to Qdrant
         self.client.upsert(collection_name=self.collection_name, points=points)
         print(f"Added {len(chunks)} chunks to database")
+
+    def add_from_json(
+        self,
+        json_path: Path,
+        source_book: str,
+        min_char_len: int = 1000,
+        batch_size: int = 32,
+    ):
+        """
+        Load JSON dump, chunk it, and add chunks to database.
+
+        Args:
+            json_path: Path to JSON file containing page transcriptions
+            source_book: Source book identifier (e.g., 'heroes', 'monsters')
+            min_char_len: Minimum character length for chunks before concatenation
+            batch_size: Batch size for embedding generation
+        """
+        if not json_path.exists():
+            raise FileNotFoundError(f"JSON file not found: {json_path}")
+
+        print(f"Loading JSON dump from: {json_path}")
+        with open(json_path, "r") as f:
+            json_dump = json.load(f)
+
+        print(f"Chunking {len(json_dump)} pages...")
+        chunks = chunk_json_dump(
+            json_dump=json_dump,
+            source_book=source_book,
+            min_char_len=min_char_len,
+        )
+
+        print(f"Created {len(chunks)} chunks")
+        if chunks:
+            avg_chars = sum(len(c.text) for c in chunks) / len(chunks)
+            avg_tokens = sum(c.token_count for c in chunks) / len(chunks)
+            print(f"Average chunk size: {avg_chars:.0f} chars, {avg_tokens:.1f} tokens")
+
+        # Add chunks to database
+        self.add_chunks(chunks, batch_size=batch_size)
 
     def search(
         self,
@@ -272,7 +321,7 @@ class Database:
                 {
                     "text": payload.get("text", ""),
                     "page": payload.get("page"),
-                    "source": payload.get("source", ""),
+                    "source_book": payload.get("source_book", ""),
                     "section": payload.get("section", []),
                     "chunk_index": payload.get("chunk_index", 0),
                     "token_count": payload.get("token_count", 0),

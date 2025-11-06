@@ -1,7 +1,7 @@
 """
 CLI tool for building and managing the natural language database.
 
-Processes markdown files through chunker and populates Qdrant database.
+Processes JSON transcription files through chunker and populates Qdrant database.
 """
 
 import argparse
@@ -13,58 +13,51 @@ from rich.console import Console
 from rich.markdown import Markdown
 from tqdm import tqdm
 
-from backend.database.chunker import MarkdownChunker
 from backend.database.database import Database
 
 
-def build_database(
-    markdown_file: Path,
+def build_from_json(
+    json_file: Path,
     collection_name: str = "heroes-full-v1",
-    target_tokens: int = 600,
+    source_book: str = "heroes",
+    min_char_len: int = 1000,
     batch_size: int = 32,
     device: Optional[str] = None,
 ):
     """
-    Build database from markdown file.
+    Build database from JSON transcription file.
 
     Args:
-        markdown_file: Path to markdown file to process
+        json_file: Path to JSON file containing page transcriptions
         collection_name: Name of Qdrant collection
-        target_tokens: Target chunk size in tokens
+        source_book: Source book identifier (e.g., 'heroes', 'monsters')
+        min_char_len: Minimum character length for chunks before concatenation
         batch_size: Batch size for embedding generation
         device: Device to use for embeddings ('cpu', 'cuda', 'mps', or None for auto-detect)
     """
-    if not markdown_file.exists():
-        print(f"ERROR: Markdown file not found: {markdown_file}")
+    if not json_file.exists():
+        print(f"ERROR: JSON file not found: {json_file}")
         return
 
-    print(f"\nBuilding database from: {markdown_file}")
+    print(f"\nBuilding database from: {json_file}")
     print(f"Collection: {collection_name}")
-    print(f"Target chunk size: {target_tokens} tokens")
+    print(f"Source book: {source_book}")
+    print(f"Min chunk length: {min_char_len} characters")
     if device:
         print(f"Device: {device}")
     print()
 
-    # Initialize chunker
-    chunker = MarkdownChunker(target_tokens=target_tokens)
-    print("Chunking markdown file...")
-    chunks = chunker.chunk_file(markdown_file)
-
-    print(f"Created {len(chunks)} chunks")
-    if chunks:
-        avg_tokens = sum(c.token_count for c in chunks) / len(chunks)
-        print(f"Average chunk size: {avg_tokens:.1f} tokens")
-        print(
-            f"Chunk size range: {min(c.token_count for c in chunks)} - {max(c.token_count for c in chunks)} tokens"
-        )
-
     # Initialize database
-    print("\nInitializing database...")
+    print("Initializing database...")
     db = Database(collection_name=collection_name, device=device)
     try:
-        # Add chunks to database
-        print("\nAdding chunks to database...")
-        db.add_chunks(chunks, batch_size=batch_size)
+        # Load JSON, chunk it, and add to database
+        db.add_from_json(
+            json_path=json_file,
+            source_book=source_book,
+            min_char_len=min_char_len,
+            batch_size=batch_size,
+        )
 
         # Show collection info
         info = db.get_collection_info()
@@ -405,15 +398,15 @@ def main():
     )
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
-    # Build command
+    # Build command (from JSON)
     build_parser = subparsers.add_parser(
-        "build", help="Build database from markdown file"
+        "build", help="Build database from JSON transcription file"
     )
     build_parser.add_argument(
-        "--markdown-file",
+        "--json-file",
         type=Path,
         required=True,
-        help="Path to markdown file to process",
+        help="Path to JSON file containing page transcriptions",
     )
     build_parser.add_argument(
         "--collection-name",
@@ -422,10 +415,16 @@ def main():
         help="Name of Qdrant collection (default: heroes-full-v1)",
     )
     build_parser.add_argument(
-        "--target-tokens",
+        "--source-book",
+        type=str,
+        default="heroes",
+        help="Source book identifier (e.g., 'heroes', 'monsters') (default: heroes)",
+    )
+    build_parser.add_argument(
+        "--min-char-len",
         type=int,
-        default=600,
-        help="Target chunk size in tokens (default: 600)",
+        default=1000,
+        help="Minimum character length for chunks before concatenation (default: 1000)",
     )
     build_parser.add_argument(
         "--batch-size",
@@ -546,10 +545,11 @@ def main():
     args = parser.parse_args()
 
     if args.command == "build":
-        build_database(
-            markdown_file=args.markdown_file,
+        build_from_json(
+            json_file=args.json_file,
             collection_name=args.collection_name,
-            target_tokens=args.target_tokens,
+            source_book=args.source_book,
+            min_char_len=args.min_char_len,
             batch_size=args.batch_size,
             device=args.device,
         )
