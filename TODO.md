@@ -5,20 +5,35 @@
 - file cleanup
 - fastAPI backend: needs architecting
 - rewrite ugly-chat for less code-nesting (quality)
-- abilities code: is it actually usable?
-- update page_transcription to use async_image_processor
-- what to do with rules files: are they usefull still?
+- what to do with rules files: are they useful still?
+- really understand qdrant
+  - different modalities
+  - how to return adjacent chunks for retrieval?
+  - failure mode: "What does Loner do"?: requires different index
 
 
 ## data formatting 
 ### structured data
 
+- data classification prompt updates
+prompt updates: monster stat blocks are not images. only describe images of creatures. page formatting things like side bar monster types aren't images. use the word "artwork" instead of image
+
+maybe we need to split this up into multiple calls? one for each classification.
+
+
+
 - data classification post-process: heuristics to choose one from best-of-n
+lowest number of images. then have LLM choose which one is best. maybe there is metadata on image?
+across the board, assume false positives unless all agree
+check that monster stat blocks include same elements. only take the Union of all of them
+
+
+
 - image retrieval
 
 ### unstructured data
 
-- better chunking for qdrant database: build chunk investigator
+- better chunking for qdrant database: build chunk investigator DONE
 - investigate qdrant sparse vectors
 - late-interaction models: retrieve with higher top_k, then do token-level embedding to rerank a la colBERT. does it make sense given our total number of chunks is low?
 
