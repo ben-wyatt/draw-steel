@@ -24,7 +24,7 @@ class Chunk:
     other_blocks: List[dict]
     section: Optional[List[str]] = None
     chunk_index: int = 0
-    token_count: int = 0
+    token_count: int = 0  # estimated at 4 char/tok
 
 
 def construct_chunk(
@@ -97,13 +97,11 @@ def construct_chunk(
     return chunk
 
 
-#######
-# chunking using JSON dump
 def chunk_json_dump(
     json_dump: List[dict], source_book: str, min_char_len: int = 1000
 ) -> List[Chunk]:
     """
-    Converts OCR'ed page transcriptions into chunks.
+    Converts JSON dump of page transcriptions into chunks.
     1. Remove pages that are full images.
     2. Split by header
     3. Concatenate smaller chunks until char_len > min_char_len
@@ -158,17 +156,11 @@ def chunk_json_dump(
 
 
 if __name__ == "__main__":
-    # new gemini flash preview transcription
     data_dump = json.load(
         open(
             "backend/data/heroes/natural_language/heroes_transcription_flash_preview.json"
         )
     )
-    # chunks = [page["data"] for page in data_dump]
-    # print("Chunking by header...")
-    # chunks = header_aggregate(chunks)
-    # analyze_chunks(chunks)
-    # loop_through_sequential_chunks(chunks)
     chunks = chunk_json_dump(data_dump, source_book="heroes", min_char_len=2000)
     from backend.database.chunk_inspector import analyze_chunks
 
