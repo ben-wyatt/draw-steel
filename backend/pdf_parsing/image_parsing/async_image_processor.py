@@ -203,8 +203,8 @@ async def process_images_async(
     Process page images asynchronously using LLM vision models with structured or plain text output.
 
     Args:
-        book: Book type - "heroes" or "monsters"
-        model: LLM model identifier (e.g., "openai/gpt-5-nano", "google/gemini-2.5-flash-lite")
+        book: Book type - "heroes" or "monsters" or "delian_tomb"
+        model: LLM model identifier (e.g., "google/gemini-2.5-flash-preview-09-2025" for solid and dependable, "google/gemini-2.5-flash-lite" for cheaper and higher volume)
         system_prompt: System prompt to pass to the LLM
         response_model: Optional Pydantic model class for structured output. If None, returns plain text strings.
         images_dir: Optional explicit images directory path. If None, auto-detects from book.
@@ -391,18 +391,3 @@ def json_dump(
 
     with open(output_path, "w") as f:
         json.dump(serializable_results, f, indent=2)
-
-
-# example usage:
-# if __name__ == "__main__":
-#     results = asyncio.run(
-#         process_images_async(
-#             book="heroes",
-#             model="google/gemini-2.5-flash-lite",
-#             system_prompt="Transcribe the page image to markdown format. Never infer information that is not explicitly stated in the page.",
-#             best_of_n=2,
-#             start_page=110,
-#             end_page=115,
-#         )
-#     )
-#     json_dump(results, "transcription_test.json")

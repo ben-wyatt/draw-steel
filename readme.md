@@ -55,3 +55,10 @@ Live Play feature that uses LLM to simulate a DM. It rolls dice, has dynamic in-
 
 session scribe: record session transcript (needs powerful model probably), then writes summaries for players, DM, and prep notes for DM, checked against database.
 
+
+I really like the idea of *acting* on the PDFs. having some tool that can:
+- extract via image or OCR, or both
+- specify to include pages before/after
+- take a generic pydantic model as argument to enforce LLM schema
+- also system prompt to describe in english the stuff to extract
+- take generic mask of the pdf page

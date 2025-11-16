@@ -1,5 +1,18 @@
 # To-do
 
+nov 10 goals:
+- clean up code
+ - database X
+ - pdf_parsing X
+ - mechanics
+ - models
+ - rules
+ - structured_filtering
+- transcribe monsters 
+- transcribe adventure X
+
+
+
 ## general
 
 - file cleanup

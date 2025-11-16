@@ -52,7 +52,7 @@ What to KEEP (DO transcribe):
 if __name__ == "__main__":
     results = asyncio.run(
         process_images_async(
-            book="heroes",
+            book="delian_tomb",
             model="google/gemini-2.5-flash-preview-09-2025",
             system_prompt=TRANSCRIPTION_SYSTEM_PROMPT,
             best_of_n=1,
@@ -60,4 +60,4 @@ if __name__ == "__main__":
             # end_page=130,
         )
     )
-    json_dump(results, "heroes_transcription_flash_preview.json")
+    json_dump(results, "backend/data/delian_tomb/page_transcription.json")

@@ -37,11 +37,11 @@ if __name__ == "__main__":
     results = asyncio.run(
         process_images_async(
             book="monsters",
-            model="google/gemini-2.5-flash-lite",
+            model="google/gemini-2.5-flash-preview-09-2025",
             system_prompt=SYSTEM_PROMPT,
             response_model=MonstersPageClassification,
             start_page=100,
-            end_page=102,
+            end_page=101,
             best_of_n=2,
         )
     )
