@@ -1,19 +1,18 @@
 """
 CLI tool for building and managing the natural language database.
 
-Processes JSON transcription files through chunker and populates Qdrant database.
+Processes JSON transcription files through chunker and populates Weaviate database.
 """
 
 import argparse
 from pathlib import Path
 from typing import Optional
 
-from qdrant_client.models import Distance, PointStruct, VectorParams
 from rich.console import Console
 from rich.markdown import Markdown
 from tqdm import tqdm
 
-from backend.database.database import Database
+from backend.database.weaviate_db import WeaviateDatabase
 
 
 def build_from_json(
@@ -29,7 +28,7 @@ def build_from_json(
 
     Args:
         json_file: Path to JSON file containing page transcriptions
-        collection_name: Name of Qdrant collection
+        collection_name: Name of Weaviate collection
         source_book: Source book identifier (e.g., 'heroes', 'monsters')
         min_char_len: Minimum character length for chunks before concatenation
         batch_size: Batch size for embedding generation
@@ -49,7 +48,7 @@ def build_from_json(
 
     # Initialize database
     print("Initializing database...")
-    db = Database(collection_name=collection_name, device=device)
+    db = WeaviateDatabase(collection_name=collection_name, device=device)
     try:
         # Load JSON, chunk it, and add to database
         db.add_from_json(
@@ -80,7 +79,7 @@ def test_search(
     print(f"Query: {query}")
     print(f"Limit: {limit}\n")
 
-    db = Database(collection_name=collection_name)
+    db = WeaviateDatabase(collection_name=collection_name)
     try:
         results = db.search(query=query, limit=limit)
 
@@ -108,7 +107,7 @@ def test_latency(
     print(f"Query: {query}")
     print(f"Runs: {num_runs}\n")
 
-    db = Database(collection_name=collection_name)
+    db = WeaviateDatabase(collection_name=collection_name)
     try:
         stats = db.test_latency(query=query, num_runs=num_runs)
 
@@ -133,7 +132,7 @@ def interactive_search(
     print("=" * 80)
     print("Enter queries to search the database. Type 'exit' or 'quit' to stop.\n")
 
-    db = Database(collection_name=collection_name)
+    db = WeaviateDatabase(collection_name=collection_name)
     try:
         while True:
             try:
@@ -195,22 +194,30 @@ def delete_collection(
     force: bool = False,
 ):
     """Delete a collection."""
-    db = Database(collection_name=collection_name)
+    db = WeaviateDatabase(collection_name=collection_name)
     try:
-        # Check if collection exists
-        collections = db.client.get_collections().collections
-        collection_names = [c.name for c in collections]
+        # Normalize collection name
+        normalized_name = db._normalize_collection_name(collection_name)
 
-        if collection_name not in collection_names:
-            print(f"ERROR: Collection '{collection_name}' not found")
+        # Check if collection exists
+        if not db.client.collections.exists(normalized_name):
+            print(
+                f"ERROR: Collection '{collection_name}' (normalized: '{normalized_name}') not found"
+            )
             return
 
         # Get collection info
-        info = db.client.get_collection(collection_name)
-        print(f"\nCollection: {collection_name}")
-        print(f"Points: {info.points_count}")
-        print(f"Vectors: {info.vectors_count}")
-        print(f"Status: {info.status}")
+        collection = db.client.collections.get(normalized_name)
+        aggregate_result = collection.aggregate.over_all(total_count=True)
+        points_count = (
+            aggregate_result.total_count
+            if hasattr(aggregate_result, "total_count")
+            else 0
+        )
+
+        print(f"\nCollection: {collection_name} (normalized: {normalized_name})")
+        print(f"Points: {points_count}")
+        print(f"Vectors: {points_count}")
 
         if not force:
             response = (
@@ -224,9 +231,9 @@ def delete_collection(
                 print("Aborted.")
                 return
 
-        print(f"\nDeleting collection '{collection_name}'...")
-        db.client.delete_collection(collection_name)
-        print(f"Collection '{collection_name}' deleted successfully.")
+        print(f"\nDeleting collection '{normalized_name}'...")
+        db.client.collections.delete(normalized_name)
+        print(f"Collection '{normalized_name}' deleted successfully.")
     finally:
         db.close()
 
@@ -238,68 +245,61 @@ def combine_collections(
     batch_size: int = 100,
 ):
     """
-    Combine two Qdrant collections into a new collection.
+    Combine two Weaviate collections into a new collection.
 
     Args:
         source_collection_1: Name of first source collection
         source_collection_2: Name of second source collection
         target_collection: Name of target collection to create
-        batch_size: Batch size for upserting points (default: 100)
+        batch_size: Batch size for adding objects (default: 100)
     """
     print("\nCombining collections:")
     print(f"  Source 1: {source_collection_1}")
     print(f"  Source 2: {source_collection_2}")
     print(f"  Target: {target_collection}\n")
 
-    # Use a single Database instance to access all collections through the same client
-    # This avoids the "already accessed" error with Qdrant's local client
-    db = Database(collection_name=source_collection_1)
+    # Use a single WeaviateDatabase instance to access all collections
+    db = WeaviateDatabase(collection_name=source_collection_1)
 
     try:
-        # Check that both source collections exist
-        collections = db.client.get_collections().collections
-        collection_names = [c.name for c in collections]
+        # Normalize collection names
+        norm_name_1 = db._normalize_collection_name(source_collection_1)
+        norm_name_2 = db._normalize_collection_name(source_collection_2)
+        norm_target = db._normalize_collection_name(target_collection)
 
-        if source_collection_1 not in collection_names:
-            print(f"ERROR: Source collection '{source_collection_1}' not found")
+        # Check that both source collections exist
+        all_collections = db.client.collections.list_all()
+
+        if norm_name_1 not in all_collections:
+            print(
+                f"ERROR: Source collection '{source_collection_1}' (normalized: '{norm_name_1}') not found"
+            )
             return
-        if source_collection_2 not in collection_names:
-            print(f"ERROR: Source collection '{source_collection_2}' not found")
+        if norm_name_2 not in all_collections:
+            print(
+                f"ERROR: Source collection '{source_collection_2}' (normalized: '{norm_name_2}') not found"
+            )
             return
 
         # Check if target collection already exists
-        if target_collection in collection_names:
-            print(f"WARNING: Target collection '{target_collection}' already exists")
+        if norm_target in all_collections:
+            print(
+                f"WARNING: Target collection '{target_collection}' (normalized: '{norm_target}') already exists"
+            )
             response = input("Do you want to overwrite it? (yes/no): ").strip().lower()
             if response != "yes":
                 print("Aborted.")
                 return
-            print(f"Deleting existing collection '{target_collection}'...")
-            db.client.delete_collection(target_collection)
+            print(f"Deleting existing collection '{norm_target}'...")
+            db.client.collections.delete(norm_target)
 
         # Get collection info to check vector dimensions
-        coll1_info = db.client.get_collection(source_collection_1)
-        coll2_info = db.client.get_collection(source_collection_2)
+        coll1 = db.client.collections.get(norm_name_1)
+        coll2 = db.client.collections.get(norm_name_2)
 
-        # Access vector dimension (handles both named and unnamed vectors)
-        vectors1 = coll1_info.config.params.vectors
-        vectors2 = coll2_info.config.params.vectors
-
-        if vectors1 is None or vectors2 is None:
-            print("ERROR: Collections must have vector configuration")
-            return
-
-        # Handle both dict (named vectors) and VectorParams (unnamed vectors)
-        if isinstance(vectors1, dict):
-            # Named vectors - get first vector config
-            dim1 = next(iter(vectors1.values())).size
-        else:
-            dim1 = vectors1.size
-
-        if isinstance(vectors2, dict):
-            dim2 = next(iter(vectors2.values())).size
-        else:
-            dim2 = vectors2.size
+        # Get vector dimensions from embedding model (both should use same model)
+        dim1 = db.embedding_dim
+        dim2 = db.embedding_dim
 
         if dim1 != dim2:
             print(
@@ -308,84 +308,120 @@ def combine_collections(
             )
             return
 
+        # Get point counts
+        agg1 = coll1.aggregate.over_all(total_count=True)
+        agg2 = coll2.aggregate.over_all(total_count=True)
+        count1 = agg1.total_count if hasattr(agg1, "total_count") else 0
+        count2 = agg2.total_count if hasattr(agg2, "total_count") else 0
+
         print(f"Vector dimension: {dim1}")
-        print(f"Points in {source_collection_1}: {coll1_info.points_count}")
-        print(f"Points in {source_collection_2}: {coll2_info.points_count}")
+        print(f"Points in {source_collection_1}: {count1}")
+        print(f"Points in {source_collection_2}: {count2}")
 
-        # Create target collection
+        # Create target collection using a temporary database instance
         print(f"\nCreating target collection '{target_collection}'...")
-        db.client.create_collection(
-            collection_name=target_collection,
-            vectors_config=VectorParams(
-                size=dim1,
-                distance=Distance.COSINE,
-            ),
-        )
+        target_db = WeaviateDatabase(collection_name=target_collection)
+        target_db.close()  # Close after creation
 
-        # Retrieve all points from both collections
-        all_points = []
-
-        print(f"\nRetrieving points from '{source_collection_1}'...")
+        # Fetch all objects with vectors from both collections
+        print(f"\nFetching objects with vectors from '{source_collection_1}'...")
+        all_data = []
         offset = None
-        while True:
-            result, offset = db.client.scroll(
-                collection_name=source_collection_1,
-                limit=1000,
-                offset=offset,
-                with_payload=True,
-                with_vectors=True,
-            )
-            all_points.extend(result)
-            if offset is None:
-                break
-        print(f"Retrieved {len(all_points)} points from '{source_collection_1}'")
+        limit = 1000
 
-        print(f"\nRetrieving points from '{source_collection_2}'...")
+        # Fetch from collection 1 with vectors
+        while True:
+            response = coll1.query.fetch_objects(
+                limit=limit,
+                offset=offset,
+                return_metadata=None,
+                include_vector=True,
+            )
+            if not response.objects:
+                break
+            for obj in response.objects:
+                # Extract vector - Weaviate returns vectors as dict with "default" key for self-provided vectors
+                vector = None
+                if hasattr(obj, "vector") and obj.vector:
+                    if isinstance(obj.vector, dict):
+                        vector = obj.vector.get("default")
+                    elif isinstance(obj.vector, list):
+                        vector = obj.vector
+                all_data.append(
+                    {
+                        "properties": obj.properties,
+                        "vector": vector,
+                    }
+                )
+            if len(response.objects) < limit:
+                break
+            offset = limit if offset is None else offset + limit
+        print(f"Retrieved {len(all_data)} objects from '{source_collection_1}'")
+
+        # Fetch from collection 2 with vectors
+        print(f"\nFetching objects with vectors from '{source_collection_2}'...")
         offset = None
-        points_from_2 = 0
+        objects_from_2 = 0
         while True:
-            result, offset = db.client.scroll(
-                collection_name=source_collection_2,
-                limit=1000,
+            response = coll2.query.fetch_objects(
+                limit=limit,
                 offset=offset,
-                with_payload=True,
-                with_vectors=True,
+                return_metadata=None,
+                include_vector=True,
             )
-            all_points.extend(result)
-            points_from_2 += len(result)
-            if offset is None:
+            if not response.objects:
                 break
-        print(f"Retrieved {points_from_2} points from '{source_collection_2}'")
+            for obj in response.objects:
+                # Extract vector - Weaviate returns vectors as dict with "default" key for self-provided vectors
+                vector = None
+                if hasattr(obj, "vector") and obj.vector:
+                    if isinstance(obj.vector, dict):
+                        vector = obj.vector.get("default")
+                    elif isinstance(obj.vector, list):
+                        vector = obj.vector
+                all_data.append(
+                    {
+                        "properties": obj.properties,
+                        "vector": vector,
+                    }
+                )
+                objects_from_2 += 1
+            if len(response.objects) < limit:
+                break
+            offset = limit if offset is None else offset + limit
+        print(f"Retrieved {objects_from_2} objects from '{source_collection_2}'")
 
-        print(f"\nTotal points to add: {len(all_points)}")
+        print(f"\nTotal objects to add: {len(all_data)}")
 
-        # Convert to PointStruct and upsert in batches
-        print(f"\nAdding points to '{target_collection}'...")
-        point_structs = [
-            PointStruct(
-                id=point.id,
-                vector=point.vector,
-                payload=point.payload,
-            )
-            for point in all_points
-        ]
-
-        # Upsert in batches
-        for i in tqdm(
-            range(0, len(point_structs), batch_size),
-            desc="Upserting points",
-            unit="batch",
-        ):
-            batch = point_structs[i : i + batch_size]
-            db.client.upsert(collection_name=target_collection, points=batch)
+        # Add objects to target collection in batches
+        print(f"\nAdding objects to '{target_collection}'...")
+        target_db = WeaviateDatabase(collection_name=target_collection)
+        try:
+            target_collection_obj = target_db.client.collections.get(norm_target)
+            with target_collection_obj.batch.dynamic() as batch:
+                for i, data in enumerate(
+                    tqdm(all_data, desc="Adding objects", unit="obj")
+                ):
+                    batch.add_object(
+                        properties=data["properties"],
+                        vector=data["vector"],
+                    )
+                    # Batch automatically flushes when it reaches internal size limit
+                    # or when context manager exits
+        finally:
+            target_db.close()
 
         # Show final collection info
-        target_info = db.client.get_collection(target_collection)
-        print("\nCollections combined successfully!")
-        print(f"Target collection: {target_collection}")
-        print(f"Total points: {target_info.points_count}")
-        print(f"Vectors: {target_info.vectors_count}")
-        print(f"Status: {target_info.status}")
+        final_db = WeaviateDatabase(collection_name=target_collection)
+        try:
+            info = final_db.get_collection_info()
+            print("\nCollections combined successfully!")
+            print(f"Target collection: {target_collection}")
+            print(f"Total points: {info['points_count']}")
+            print(f"Vectors: {info['vectors_count']}")
+            print(f"Status: {info['status']}")
+        finally:
+            final_db.close()
 
     finally:
         db.close()
@@ -411,8 +447,8 @@ def main():
     build_parser.add_argument(
         "--collection-name",
         type=str,
-        default="heroes-full-v1",
-        help="Name of Qdrant collection (default: heroes-full-v1)",
+        default="all-books-v1",
+        help="Name of Weaviate collection (default: all-books-v1)",
     )
     build_parser.add_argument(
         "--source-book",
@@ -446,7 +482,7 @@ def main():
         "--collection-name",
         type=str,
         default="heroes-full-v1",
-        help="Name of Qdrant collection (default: heroes-full-v1)",
+        help="Name of Weaviate collection (default: heroes-full-v1)",
     )
     search_parser.add_argument(
         "--query",
@@ -466,8 +502,8 @@ def main():
     latency_parser.add_argument(
         "--collection-name",
         type=str,
-        default="heroes-full-v1",
-        help="Name of Qdrant collection (default: heroes-full-v1)",
+        default="all-books-v1",
+        help="Name of Weaviate collection (default: all-books-v1)",
     )
     latency_parser.add_argument(
         "--query",
@@ -489,8 +525,8 @@ def main():
     interactive_parser.add_argument(
         "--collection-name",
         type=str,
-        default="heroes-full-v1",
-        help="Name of Qdrant collection (default: heroes-full-v1)",
+        default="all-books-v1",
+        help="Name of Weaviate collection (default: all-books-v1)",
     )
     interactive_parser.add_argument(
         "--limit",

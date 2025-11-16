@@ -4,6 +4,8 @@ Database system for storing and retrieving Draw Steel TTRPG rules using semantic
 
 MOST UP TO DATE DATABASE: `heroes-full-v1`
 
+**Note:** This codebase has been migrated from Qdrant to Weaviate. The `Database` class is now an alias for `WeaviateDatabase` for backward compatibility.
+
 ## Components
 
 ### Chunker
@@ -53,32 +55,31 @@ embeddings = model.embed(["text 1", "text 2"])
 
 ### Database
 
-Qdrant-based database for storing and searching chunks.
+Weaviate-based database for storing and searching chunks.
 
-Database files are stored in `backend/data/db_files/` (gitignored).
-
-The database directory structure:
-```
-backend/data/db_files/
-└── qdrant/
-    └── [collection data]
-```
+Uses Weaviate v4 client API. By default, connects to a local Weaviate instance running on `http://localhost:8080` (typically via Docker). Can also use embedded Weaviate or connect to remote instances.
 
 **Usage:**
 ```python
-from backend.database import Database
+from backend.database import Database, WeaviateDatabase
 
-# Initialize database
+# Initialize database (connects to local Weaviate by default)
 db = Database(collection_name="draw_steel_rules")
+# Or explicitly use WeaviateDatabase
+db = WeaviateDatabase(collection_name="draw_steel_rules")
 
 # Add chunks
 db.add_chunks(chunks)
 
-# Search
+# Search (hybrid search by default)
 results = db.search("surprise round", limit=10)
 
 # Test latency
 stats = db.test_latency("surprise round", num_runs=10)
+
+# List all collections
+from backend.database import list_collections
+collections = list_collections()
 ```
 
 

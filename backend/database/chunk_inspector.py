@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from backend.database.chunker import Chunk
-from backend.database.database import Database
+from backend.database.weaviate_db import WeaviateDatabase
 
 
 def analyze_chunks(chunks: List[Chunk]) -> None:
@@ -112,46 +112,147 @@ def load_chunks_from_collection(
     Load all chunks from a database collection.
 
     Args:
-        collection_name: Name of the Qdrant collection
-        db_path: Optional path to database directory
+        collection_name: Name of the Weaviate collection
+        db_path: Optional path to database directory (ignored for Weaviate)
 
     Returns:
         List of Chunk objects
     """
-    db = Database(collection_name=collection_name, db_path=db_path)
+    db = WeaviateDatabase(collection_name=collection_name)
     try:
         chunks = []
         offset = None
+        limit = 1000
 
         print(f"Loading chunks from collection '{collection_name}'...")
+        # Use normalized collection name (Weaviate normalizes collection names)
+        normalized_name = db._normalize_collection_name(collection_name)
+        collection = db.client.collections.get(normalized_name)
+
         while True:
-            result, offset = db.client.scroll(
-                collection_name=collection_name,
-                limit=1000,
+            # Fetch objects with pagination
+            response = collection.query.fetch_objects(
+                limit=limit,
                 offset=offset,
-                with_payload=True,
-                with_vectors=False,
+                return_metadata=None,
             )
 
-            for point in result:
-                payload = point.payload or {}
+            if not response.objects:
+                break
+
+            for obj in response.objects:
+                props = obj.properties
+
+                # Type-safe property extraction with defaults
+                text_val = props.get("text")
+                text = str(text_val) if text_val is not None else ""
+
+                page_val = props.get("page")
+                page = (
+                    int(page_val)
+                    if isinstance(page_val, (int, float)) and page_val is not None
+                    else None
+                )
+
+                source_book_val = props.get("source_book")
+                source_book = (
+                    str(source_book_val) if source_book_val is not None else ""
+                )
+
+                # Handle list properties - blocks are stored as TEXT_ARRAY (List[str]) in Weaviate
+                # but Chunk expects List[dict], so we convert strings to dicts
+                # If items are already dicts, use them as-is
+                def _convert_block_item(item):
+                    """Convert block item to dict format."""
+                    if isinstance(item, dict):
+                        return item
+                    elif isinstance(item, (str, int, float, bool)):
+                        return {"name": str(item)}
+                    else:
+                        return {}
+
+                ability_blocks_raw = props.get("ability_blocks")
+                if isinstance(ability_blocks_raw, list):
+                    ability_blocks = [
+                        _convert_block_item(item) for item in ability_blocks_raw
+                    ]
+                else:
+                    ability_blocks = []
+
+                monster_blocks_raw = props.get("monster_blocks")
+                if isinstance(monster_blocks_raw, list):
+                    monster_blocks = [
+                        _convert_block_item(item) for item in monster_blocks_raw
+                    ]
+                else:
+                    monster_blocks = []
+
+                item_blocks_raw = props.get("item_blocks")
+                if isinstance(item_blocks_raw, list):
+                    item_blocks = [
+                        _convert_block_item(item) for item in item_blocks_raw
+                    ]
+                else:
+                    item_blocks = []
+
+                other_blocks_raw = props.get("other_blocks")
+                if isinstance(other_blocks_raw, list):
+                    other_blocks = [
+                        _convert_block_item(item) for item in other_blocks_raw
+                    ]
+                else:
+                    other_blocks = []
+
+                # Handle section - should be List[str] or None
+                section_raw = props.get("section")
+                if isinstance(section_raw, list):
+                    section = [str(s) for s in section_raw if s is not None]
+                else:
+                    section = None
+
+                # Handle integer properties with proper type checking
+                chunk_index_val = props.get("chunk_index")
+                if (
+                    isinstance(chunk_index_val, (int, float))
+                    and chunk_index_val is not None
+                ):
+                    chunk_index = int(chunk_index_val)
+                else:
+                    chunk_index = 0
+
+                token_count_val = props.get("token_count")
+                if (
+                    isinstance(token_count_val, (int, float))
+                    and token_count_val is not None
+                ):
+                    token_count = int(token_count_val)
+                else:
+                    token_count = 0
+
                 chunk = Chunk(
-                    text=payload.get("text", ""),
-                    page=payload.get("page"),
-                    source_book=payload.get("source_book", ""),
-                    chunk_id=str(point.id),
-                    ability_blocks=payload.get("ability_blocks", []),
-                    monster_blocks=payload.get("monster_blocks", []),
-                    item_blocks=payload.get("item_blocks", []),
-                    other_blocks=payload.get("other_blocks", []),
-                    section=payload.get("section"),
-                    chunk_index=payload.get("chunk_index", 0),
-                    token_count=payload.get("token_count", 0),
+                    text=text,
+                    page=page,
+                    source_book=source_book,
+                    chunk_id=str(obj.uuid),
+                    ability_blocks=ability_blocks,
+                    monster_blocks=monster_blocks,
+                    item_blocks=item_blocks,
+                    other_blocks=other_blocks,
+                    section=section,
+                    chunk_index=chunk_index,
+                    token_count=token_count,
                 )
                 chunks.append(chunk)
 
-            if offset is None:
+            # Check if we've fetched all objects
+            if len(response.objects) < limit:
                 break
+
+            # Update offset for next batch
+            if offset is None:
+                offset = limit
+            else:
+                offset += limit
 
         print(f"Loaded {len(chunks)} chunks")
         return chunks
@@ -180,7 +281,7 @@ def main():
         "--db-path",
         type=str,
         default=None,
-        help="Optional path to database directory",
+        help="Optional path to database directory (ignored for Weaviate)",
     )
 
     args = parser.parse_args()

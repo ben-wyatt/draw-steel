@@ -12,7 +12,11 @@ nov 10 goals:
 - transcribe adventure X
 
 
-
+nov 16 goals:
+- finish weaviate migration X
+ - gut-check efficacy using ugly chat X
+ - make `create_db.py` which generates database X
+ - ReAct agent ugly_chat
 
 
 ## general
