@@ -82,4 +82,8 @@ like I have to make a code change just to
 
 the core idea is that I want an easy way to save and edit specific extraction operations like transcription, image analysis, ability extraction.
 
-what would you recommend as some possible solutions?
+
+I will often have a pattern of using one config to classify stuff on the page and then another config that extracts stuff conditional on that classification.
+
+"extract all monster stat blocks from Monsters PDF. filter on pages with `monster_block`>1 in @classification_artifact.json"
+

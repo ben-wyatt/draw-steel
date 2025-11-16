@@ -13,6 +13,8 @@ nov 10 goals:
 
 
 
+
+
 ## general
 
 - file cleanup

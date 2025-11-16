@@ -61,4 +61,4 @@ I really like the idea of *acting* on the PDFs. having some tool that can:
 - specify to include pages before/after
 - take a generic pydantic model as argument to enforce LLM schema
 - also system prompt to describe in english the stuff to extract
-- take generic mask of the pdf page
+- take generic mask of the pdf page based on an easily specified conditional
