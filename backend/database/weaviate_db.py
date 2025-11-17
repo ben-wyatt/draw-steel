@@ -9,6 +9,7 @@ from typing import List, Optional
 import weaviate
 from weaviate.classes.config import Configure, DataType, Property, VectorDistances
 from weaviate.classes.query import Filter, MetadataQuery
+from weaviate.exceptions import WeaviateConnectionError
 
 from backend.database.chunker import Chunk
 from backend.database.embeddings import EmbeddingModel
@@ -81,32 +82,39 @@ class WeaviateDatabase:
         self.collection_name = collection_name
 
         # Initialize Weaviate client
-        if embedded_options is not None:
-            # Use embedded Weaviate if explicitly requested
-            self.client = weaviate.WeaviateClient(embedded_options=embedded_options)
-            self.client.connect()
-        elif url is not None:
-            # Custom URL provided - use connect_to_local helper
-            import urllib.parse
+        try:
+            if embedded_options is not None:
+                # Use embedded Weaviate if explicitly requested
+                self.client = weaviate.WeaviateClient(embedded_options=embedded_options)
+                self.client.connect()
+            elif url is not None:
+                # Custom URL provided - use connect_to_local helper
+                import urllib.parse
 
-            parsed = urllib.parse.urlparse(url)
-            host = parsed.hostname or "localhost"
-            port = parsed.port or 8080
-            self.client = weaviate.connect_to_local(
-                host=host,
-                port=port,
-                headers=additional_headers,
-                auth_credentials=auth_client_secret,
-            )
-        else:
-            # Default: connect to local Docker container (http://localhost:8080)
-            self.client = weaviate.connect_to_local(
-                host="localhost",
-                port=8080,
-                grpc_port=50051,
-                headers=additional_headers,
-                auth_credentials=auth_client_secret,
-            )
+                parsed = urllib.parse.urlparse(url)
+                host = parsed.hostname or "localhost"
+                port = parsed.port or 8080
+                self.client = weaviate.connect_to_local(
+                    host=host,
+                    port=port,
+                    headers=additional_headers,
+                    auth_credentials=auth_client_secret,
+                )
+            else:
+                # Default: connect to local Docker container (http://localhost:8080)
+                self.client = weaviate.connect_to_local(
+                    host="localhost",
+                    port=8080,
+                    grpc_port=50051,
+                    headers=additional_headers,
+                    auth_credentials=auth_client_secret,
+                )
+        except WeaviateConnectionError as e:
+            raise ConnectionError(
+                "Cannot connect to Weaviate Database.\n"
+                "Is it running?\n"
+                "If using Docker, ensure daemon and container are running and are reachable."
+            ) from e
 
         # Initialize embedding model
         if embedding_model is None:

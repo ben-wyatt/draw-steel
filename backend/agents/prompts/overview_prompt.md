@@ -13,11 +13,12 @@ Ancestries: Devil, Dragon Knights, Dwarf, Wode Elf, High Elf, Hakaan, Human, Mem
 Cultures
 Careers
 Classes: Censor, Conduit, Elementalist, Fury, Null, Shadow, Tactician, Talent, Troubador
-Kits: some classes provide specific equipment lodouts for martial combat
+Kits: some classes provide specific equipment loadouts for martial combat
 Leveling: character levels start at 1 and go up to 10
 
 ## Gameplay
 Combat
+Recoveries and Respites
 Negotiation
 Downtime Projects
 Rewards

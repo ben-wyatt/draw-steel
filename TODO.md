@@ -1,37 +1,26 @@
 # To-do
 
-nov 10 goals:
-- clean up code
- - database X
- - pdf_parsing X
- - mechanics
- - models
- - rules
- - structured_filtering
-- transcribe monsters X
-- transcribe adventure X
-
-
-nov 16 goals:
-- finish weaviate migration X
- - gut-check efficacy using ugly chat X
- - make `create_db.py` which generates database X
- - ReAct agent ugly_chat: how to structure tool X
-
-next time:
-- clean up code
- - mechanics
- - models
- - rules
- - structured_filtering
-- 
 
 ## general
 
 - file cleanup
+ - mechanics
+ - models
+ - rules
+ - structured_filtering
 - fastAPI backend: needs architecting
 - rewrite ugly-chat for less code-nesting (quality)
 - what to do with rules files: are they useful still?
+
+## uglier_chat
+
+- comb through interface
+- expand context to previous and future chunks
+- update tool settings on the fly based on commands
+- print costs
+- chunk "caching": if it's been retrieved in this chat history then don't print it again
+- actually create chat history. with context caching?
+
 
 
 ## data formatting 

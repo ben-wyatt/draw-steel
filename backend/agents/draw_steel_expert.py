@@ -68,3 +68,50 @@ draw_steel_expert = Agent(
     tools=[search_text],
     model=GEMINI_FLASH_LITE_MODEL,
 )
+
+
+"""
+TODO: don't repeat the same chunk in a chat history.
+ - unique chunk id: `source_book:page:chunk_index`
+ - each chat history should have set of chunks and ids that are excluded from retrieval
+ - make object-oriented
+"""
+
+
+class DrawSteelExpert:
+    """
+    features:
+     - database connection
+     - agent init
+     - chat history management
+     - token and event streaming
+     - async for multiple concurrent agents
+     - surrounding-chunk retrieval
+
+    """
+
+    def __init__(self):
+        # db connect, model init, agent init, etc.
+        pass
+
+    def chat(self, query: str):
+        """Stream chat events."""
+        pass
+
+    def clear_chat_history(self):
+        pass
+
+    def switch_model(self):
+        pass
+
+    def get_chat_history(self):
+        pass
+
+    def update_retrieval(self):
+        """
+        - top_k
+        - surrounding_chunks
+        - thinking_depth
+        - max_calls
+        """
+        pass
