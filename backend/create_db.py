@@ -11,7 +11,7 @@ from backend.database.weaviate_db import WeaviateDatabase
 def main():
     """Build Weaviate collection from transcription JSON files."""
     # Configuration
-    collection_name = "all-books-v1"
+    collection_name = "AllBooksV1"
     min_char_len = 1000
     batch_size = 32
 
