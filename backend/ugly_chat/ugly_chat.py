@@ -332,8 +332,8 @@ def main():
     parser.add_argument(
         "--collection-name",
         type=str,
-        default="all-books-v1",
-        help="Name of Weaviate collection (default: all-books-v1)",
+        default="DelianTombV1",
+        help="Name of Weaviate collection (default: DelianTombV1)",
     )
     parser.add_argument(
         "--top-k",

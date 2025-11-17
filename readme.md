@@ -53,7 +53,9 @@ Knowledge Graphs constructed via proper noun relationships like Obsidian. run re
 
 Live Play feature that uses LLM to simulate a DM. It rolls dice, has dynamic in-context gamestate, can run combat through a custom game engine.
 
-session scribe: record session transcript (needs powerful model probably), then writes summaries for players, DM, and prep notes for DM, checked against database.
+session scribe: record session transcript (needs to be aware of proper nouns), then writes summaries for players, DM, and prep notes for DM, checked against database maybe?
+
+Multi-modal LLMs as OCR machines work very well, but will mess up some proper nouns. Like Iulius vs Julius.  Is there some way where we can do a combo move here? I'm using the LLMs essentially as generic image structure parsers. Everything else I can use PyMuPDF for right?
 
 
 I really like the idea of *acting* on the PDFs. having some tool that can:
@@ -62,3 +64,4 @@ I really like the idea of *acting* on the PDFs. having some tool that can:
 - take a generic pydantic model as argument to enforce LLM schema
 - also system prompt to describe in english the stuff to extract
 - take generic mask of the pdf page based on an easily specified conditional
+

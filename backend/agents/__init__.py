@@ -14,6 +14,9 @@ from phoenix.otel import register
 from backend.utils.keys import get_openrouter_api_key
 
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="aiohttp")
+warnings.filterwarnings(
+    "ignore", message=r".*enable_cleanup_closed.*", category=DeprecationWarning
+)
 
 
 set_default_openai_api("responses")
@@ -47,7 +50,7 @@ if is_phoenix_running():
     warnings.filterwarnings(
         "ignore",
         message=r"Pydantic serializer warnings:",
-        category=UserWarning,
+        category=Warning,
     )
     os.environ["PHOENIX_COLLECTOR_ENDPOINT"] = "http://localhost:6006"
     set_tracing_export_api_key(str(get_openrouter_api_key()))
