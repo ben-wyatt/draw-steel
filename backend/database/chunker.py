@@ -18,10 +18,10 @@ class Chunk:
     page: Optional[int]
     source_book: str
     chunk_id: str
-    ability_blocks: List[dict]
-    monster_blocks: List[dict]
-    item_blocks: List[dict]
-    other_blocks: List[dict]
+    ability_blocks: List[str]
+    monster_blocks: List[str]
+    item_blocks: List[str]
+    other_blocks: List[str]
     section: Optional[List[str]] = None
     chunk_index: int = 0
     token_count: int = 0  # estimated at 4 char/tok
@@ -51,7 +51,7 @@ def construct_chunk(
     ]
     item_blocks = [match[0] for match in matches if match[1].lower() == "item"]
     other_blocks = [
-        match
+        match[0]
         for match in matches
         if match[1].lower() != "ability"
         and match[1].lower() != "monster_block"

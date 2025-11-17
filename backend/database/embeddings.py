@@ -38,7 +38,7 @@ class EmbeddingModel:
 
     def _load_model(self):
         """Load the embedding model."""
-        print(f"Loading embedding model: {self.model_name} on device: {self.device}...")
+        # print(f"Loading embedding model: {self.model_name} on device: {self.device}...")
 
         # Get HuggingFace token for gated models
         hf_token = get_hf_token()
@@ -56,7 +56,7 @@ class EmbeddingModel:
                 device=self.device,
             )
 
-        print("Model loaded successfully.")
+        # print("Model loaded successfully.")
 
     def embed(self, texts: List[str], show_progress: bool = False) -> List[List[float]]:
         """

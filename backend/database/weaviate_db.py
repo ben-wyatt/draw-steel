@@ -120,32 +120,12 @@ class WeaviateDatabase:
         # Create collection if it doesn't exist
         self._ensure_collection()
 
-    def _normalize_collection_name(self, name: str) -> str:
-        """
-        Convert collection name to valid Weaviate format (PascalCase, no hyphens).
-
-        Args:
-            name: Original collection name (may contain hyphens, lowercase, etc.)
-
-        Returns:
-            Valid Weaviate collection name in PascalCase
-        """
-        # Split by hyphens/underscores and convert to PascalCase
-        parts = name.replace("-", "_").split("_")
-        pascal_case = "".join(part.capitalize() for part in parts if part)
-        return pascal_case
-
     def _ensure_collection(self):
         """Create collection if it doesn't exist or recreate if dimension mismatch."""
-        # Normalize collection name to valid Weaviate format
-        normalized_name = self._normalize_collection_name(self.collection_name)
-
-        if not self.client.collections.exists(normalized_name):
-            print(
-                f"Creating collection: {normalized_name} (from '{self.collection_name}')"
-            )
+        if not self.client.collections.exists(self.collection_name):
+            print(f"Creating collection: {self.collection_name}")
             self.client.collections.create(
-                name=normalized_name,
+                name=self.collection_name,
                 vector_config=Configure.Vectors.self_provided(
                     vector_index_config=Configure.VectorIndex.hnsw(
                         distance_metric=VectorDistances.COSINE,
@@ -157,21 +137,13 @@ class WeaviateDatabase:
                     Property(name="source_book", data_type=DataType.TEXT),
                     Property(name="section", data_type=DataType.TEXT_ARRAY),
                     Property(name="chunk_index", data_type=DataType.INT),
-                    Property(name="token_count", data_type=DataType.INT),
-                    Property(name="ability_blocks", data_type=DataType.TEXT_ARRAY),
-                    Property(name="monster_blocks", data_type=DataType.TEXT_ARRAY),
-                    Property(name="item_blocks", data_type=DataType.TEXT_ARRAY),
-                    Property(name="other_blocks", data_type=DataType.TEXT_ARRAY),
                 ],
             )
             print(
-                f"Collection '{normalized_name}' created with dimension {self.embedding_dim}"
+                f"Collection '{self.collection_name}' created with dimension {self.embedding_dim}"
             )
         else:
-            print(f"Using existing collection: {normalized_name}")
-
-        # Update collection_name to normalized version for consistency
-        self.collection_name = normalized_name
+            print(f"Using existing collection: {self.collection_name}")
 
     def add_chunks(self, chunks: List[Chunk], batch_size: int = 32):
         """
@@ -204,11 +176,6 @@ class WeaviateDatabase:
                     "source_book": chunk.source_book,
                     "section": chunk.section if chunk.section is not None else [],
                     "chunk_index": chunk.chunk_index,
-                    "token_count": chunk.token_count,
-                    "ability_blocks": chunk.ability_blocks,
-                    "monster_blocks": chunk.monster_blocks,
-                    "item_blocks": chunk.item_blocks,
-                    "other_blocks": chunk.other_blocks,
                 }
                 batch.add_object(
                     properties=data_object,
@@ -357,7 +324,6 @@ class WeaviateDatabase:
                     "source_book": props.get("source_book", ""),
                     "section": props.get("section", []),
                     "chunk_index": props.get("chunk_index", 0),
-                    "token_count": props.get("token_count", 0),
                     "score": 1.0 - obj.metadata.distance
                     if obj.metadata.distance is not None
                     else 0.0,
@@ -420,7 +386,6 @@ class WeaviateDatabase:
                     "source_book": props.get("source_book", ""),
                     "section": props.get("section", []),
                     "chunk_index": props.get("chunk_index", 0),
-                    "token_count": props.get("token_count", 0),
                     "score": obj.metadata.score
                     if obj.metadata.score is not None
                     else 0.0,
@@ -490,7 +455,6 @@ class WeaviateDatabase:
                     "source_book": props.get("source_book", ""),
                     "section": props.get("section", []),
                     "chunk_index": props.get("chunk_index", 0),
-                    "token_count": props.get("token_count", 0),
                     "score": obj.metadata.score
                     if obj.metadata.score is not None
                     else 0.0,

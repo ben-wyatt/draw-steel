@@ -16,7 +16,7 @@ nov 16 goals:
 - finish weaviate migration X
  - gut-check efficacy using ugly chat X
  - make `create_db.py` which generates database X
- - ReAct agent ugly_chat
+ - ReAct agent ugly_chat: how to structure tool X
 
 
 ## general
