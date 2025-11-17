@@ -67,8 +67,8 @@ def main():
     parser.add_argument(
         "--collection-name",
         type=str,
-        default="DelianTombV1",
-        help="Name of the database collection to use (default: DelianTombV1)",
+        default="AllBooksV1",
+        help="Name of the database collection to use (default: AllBooksV1)",
     )
 
     parser.add_argument(

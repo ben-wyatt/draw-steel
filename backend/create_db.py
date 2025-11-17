@@ -68,8 +68,8 @@ def main():
         print("\n" + "=" * 60)
         print("Database built successfully!")
         print(f"Collection: {info['name']}")
-        print(f"Vector dimension: {info['vector_dimension']}")
-        print(f"Properties: {', '.join(info['properties'])}")
+        print(f"Vector dimension: {info['config']['vector_size']}")
+        print(f"Distance: {info['config']['distance']}")
         print("=" * 60)
     finally:
         db.close()

@@ -8,7 +8,7 @@ nov 10 goals:
  - models
  - rules
  - structured_filtering
-- transcribe monsters 
+- transcribe monsters X
 - transcribe adventure X
 
 
@@ -18,6 +18,13 @@ nov 16 goals:
  - make `create_db.py` which generates database X
  - ReAct agent ugly_chat: how to structure tool X
 
+next time:
+- clean up code
+ - mechanics
+ - models
+ - rules
+ - structured_filtering
+- 
 
 ## general
 
@@ -25,20 +32,10 @@ nov 16 goals:
 - fastAPI backend: needs architecting
 - rewrite ugly-chat for less code-nesting (quality)
 - what to do with rules files: are they useful still?
-- really understand qdrant
-  - different modalities
-  - how to return adjacent chunks for retrieval?
-  - failure mode: "What does Loner do"?: requires different index
 
 
 ## data formatting 
 ### structured data
-
-- data classification prompt updates
-prompt updates: monster stat blocks are not images. only describe images of creatures. page formatting things like side bar monster types aren't images. use the word "artwork" instead of image
-
-maybe we need to split this up into multiple calls? one for each classification.
-
 
 
 - data classification post-process: heuristics to choose one from best-of-n
@@ -46,9 +43,12 @@ lowest number of images. then have LLM choose which one is best. maybe there is 
 across the board, assume false positives unless all agree
 check that monster stat blocks include same elements. only take the Union of all of them
 
+### images
 
-
-- image retrieval
+best way to handle this is first extract all art via pymupdf
+then summarize image (with surrounding 3 pages of content)
+save with page number
+upon retrieval: llm/deterministic decision to show image
 
 ### unstructured data
 
