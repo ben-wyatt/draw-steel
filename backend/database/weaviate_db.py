@@ -150,8 +150,8 @@ class WeaviateDatabase:
             print(
                 f"Collection '{self.collection_name}' created with dimension {self.embedding_dim}"
             )
-        else:
-            print(f"Using existing collection: {self.collection_name}")
+        # else:
+        #     print(f"Using existing collection: {self.collection_name}")
 
     def add_chunks(self, chunks: List[Chunk], batch_size: int = 32):
         """
