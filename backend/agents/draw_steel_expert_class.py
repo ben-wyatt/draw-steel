@@ -1,9 +1,10 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional
+from uuid import uuid4
 
-from agents import Agent, Runner, RunResult, function_tool
+from agents import Agent, Runner, RunResult, Session, SQLiteSession, function_tool
 from agents.extensions.models.litellm_model import LitellmModel
 
 from backend.database import Database
@@ -17,7 +18,7 @@ DRAW_STEEL_EXPERT_PROMPT = Path(
 @dataclass
 class RetrievalConfig:
     collection_name: str
-    model: LitellmModel = GEMINI_FLASH_LITE_MODEL
+    model: LitellmModel
     top_k: int = 5
     hybrid_alpha: float = 0.5
     # surrounding_chunks: int = 0
@@ -25,12 +26,20 @@ class RetrievalConfig:
 
 
 class DrawSteelExpert:
-    def __init__(self, retrieval_config: RetrievalConfig):
-        self.retrieval_config = retrieval_config
+    def __init__(
+        self,
+        collection_name: str,
+        session_id: Optional[str] = None,
+        model: LitellmModel = GEMINI_FLASH_LITE_MODEL,
+    ):
+        self.retrieval_config = RetrievalConfig(
+            collection_name=collection_name, model=model
+        )
 
-        # lazy init
         self._agent: Optional[Agent] = None
         self._database: Optional[Database] = None
+
+        self.sessions: Dict[str, Session] = {}
 
     @property
     def database(self) -> Database:
@@ -70,8 +79,38 @@ class DrawSteelExpert:
             self._agent = self._create_agent()
         return self._agent
 
-    async def run_agent(self, query: str) -> RunResult:
-        return await Runner.run(self.agent, query)
+    async def run_agent(
+        self, query: str, session_id: Optional[str] = None
+    ) -> RunResult:
+        if session_id:
+            if session_id not in self.sessions:
+                self.create_session(session_id)
+            session = self.sessions[session_id]
+        else:
+            session_id = self.create_session()
+            session = self.sessions[session_id]
+        print(f"Using session id: {session_id}")
+        return await Runner.run(self.agent, query, session=session)
+
+    def update_retrieval_config(self, retrieval_config: RetrievalConfig):
+        self.retrieval_config = retrieval_config
+        if self._agent is not None:
+            self._agent = self._create_agent()
+        if self._database is not None:
+            self._database = Database(
+                collection_name=self.retrieval_config.collection_name
+            )
+
+    def create_session(self, session_id: Optional[str] = None) -> str:
+        if session_id is None:
+            session_id = str(uuid4())
+        if session_id in self.sessions:
+            raise ValueError(f"Session with id {session_id} already exists")
+        self.sessions[session_id] = SQLiteSession(session_id=session_id)
+        return session_id
+
+    def list_sessions(self) -> List[str]:
+        return list(self.sessions.keys())
 
     def close(self):
         if self._database is not None:
@@ -94,11 +133,13 @@ should use agents sdk primitives: tool, agent, session, handoff
 
 
 Functionality organized:
-- RetrievalConfig: agent parameters for search
-- initialization: create agent, create tool
-- chat
-- update retrieval configs
-- session management
+- RetrievalConfig: agent parameters for search X
+- initialization: create agent, create tool X
+- chat X
+- update retrieval configs X
+- session management X
 - streaming_chat
+- adjacent chunks
 
+TODO: does it make sense to return the Session object instead of the session id?
 """
