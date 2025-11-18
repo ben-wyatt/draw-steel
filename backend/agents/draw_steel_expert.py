@@ -13,8 +13,6 @@ DRAW_STEEL_EXPERT_PROMPT = Path(
     "backend/agents/prompts/draw_steel_expert_prompt.md"
 ).read_text()
 
-DATABASE = Database(collection_name="DelianTombV1")
-
 
 def create_draw_steel_expert(
     collection_name: str, model: LitellmModel = GEMINI_FLASH_LITE_MODEL
@@ -48,70 +46,3 @@ def create_draw_steel_expert(
         tools=[search_text],
         model=model,
     )
-
-
-@function_tool
-async def search_text(query: str) -> str:
-    """Use combination of semantic and keyword search to find relevant information about the game and adventure.
-    Args:
-        query: The query to search for.
-    Returns:
-        A list of results from the database.
-    """
-    results = DATABASE.search(query, limit=5)
-    return str(json.dumps(results))
-
-
-draw_steel_expert = Agent(
-    name="Draw Steel Expert",
-    instructions=DRAW_STEEL_EXPERT_PROMPT,
-    tools=[search_text],
-    model=GEMINI_FLASH_LITE_MODEL,
-)
-
-
-"""
-TODO: don't repeat the same chunk in a chat history.
- - unique chunk id: `source_book:page:chunk_index`
- - each chat history should have set of chunks and ids that are excluded from retrieval
- - make object-oriented
-"""
-
-
-class DrawSteelExpert:
-    """
-    features:
-     - database connection
-     - agent init
-     - chat history management
-     - token and event streaming
-     - async for multiple concurrent agents
-     - surrounding-chunk retrieval
-
-    """
-
-    def __init__(self):
-        # db connect, model init, agent init, etc.
-        pass
-
-    def chat(self, query: str):
-        """Stream chat events."""
-        pass
-
-    def clear_chat_history(self):
-        pass
-
-    def switch_model(self):
-        pass
-
-    def get_chat_history(self):
-        pass
-
-    def update_retrieval(self):
-        """
-        - top_k
-        - surrounding_chunks
-        - thinking_depth
-        - max_calls
-        """
-        pass
