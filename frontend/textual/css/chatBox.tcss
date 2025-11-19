@@ -1,0 +1,7 @@
+ChatInteraction {
+    margin: 1;
+    padding: 1;
+    border: solid green;
+    background: $surface-lighten-1;
+}
+

@@ -1,0 +1,4 @@
+ChatHistory {
+    height: 1fr;
+    border: solid blue;
+}
