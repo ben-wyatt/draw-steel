@@ -11,13 +11,14 @@ Chat {
 MessageContainer {
     width: 100%;
     padding: 1;
+    margin: 2;
     height: auto;
 }
 
-.tool-call-container {
-    color: white;
+.tool-container {
+    color: $foreground;
     align: right bottom;
-
+    background: $surface-lighten-1;
 }
 
 .tool-result-container {
@@ -26,23 +27,30 @@ MessageContainer {
 
 .user-container {
     align: left bottom;
+    background: $surface-lighten-1;
+    width: auto;
+    max-width: 75vw;
 }
 
 .assistant-container {
     align: right top;
+    background: $surface-lighten-2;
+    max-width: 75vw;
+    width: auto;
 }
 
 
 
 .message-text {
-    background: blue;
+    background: $primary;
+    color: $foreground;
     max-width: 80vw;
     width: auto;
     height: auto;
 }
 
 Container:focus {
-    outline: vkey green;
+    outline: vkey $accent;
 }
 
 Collapsible:focus {

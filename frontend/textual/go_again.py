@@ -18,12 +18,16 @@ class MessageContainer(Container):
         self.can_focus = True
         match role:
             case "user":
+                self.row_classes = "row user-row"
                 self.classes = "user-container"
             case "assistant":
+                self.row_classes = "row assistant-row"
                 self.classes = "assistant-container"
             case "tool":
+                self.row_classes = "row tool-row"
                 self.classes = "tool-container"
             case "other":
+                self.row_classes = "row other-row"
                 self.classes = "other-container"
             case _:
                 raise ValueError(f"Invalid role: {self.role}")
@@ -34,7 +38,8 @@ class MessageContainer(Container):
             self.can_focus = False
             with Collapsible(title="search_text(query='Draw Steel')", collapsed=True):
                 yield Static(
-                    self.message + "\n\n" + text, classes=self.role + " message-text"
+                    self.message + "\n\n" + text,
+                    classes=self.role + " message-text",
                 )
         else:
             yield Static(self.message, classes=self.role + " message-text")
@@ -80,6 +85,10 @@ class ChatApp(App):
         ),
     ]
 
+    def on_mount(self) -> None:
+        """Set theme on mount"""
+        self.theme = "nord"
+
     def compose(self) -> ComposeResult:
         yield Header()
         yield Chat()
@@ -99,7 +108,6 @@ if __name__ == "__main__":
 """
 TODO: check with heavy lorem ipsum
 TODO: switch Static to Markdown
-TODO: color themes
 TODO: add async chat history rendering
 TODO: test with simulated chat
 TODO: connect with backend
