@@ -1,0 +1,20 @@
+UserMessage {
+    margin: 1 0;
+    padding: 1;
+    background: $surface-lighten-1;
+}
+
+AssistantMessage {
+    margin: 1 0;
+    padding: 1;
+    background: $surface-lighten-1;
+}
+
+ToolCallMessage {
+    margin: 1 0;
+}
+
+ToolResultMessage {
+    margin: 1 0;
+}
+

@@ -1,0 +1,59 @@
+Chat {
+    layout: vertical;
+    height: 1fr;
+}
+
+#chat-history {
+    align: center middle;
+    layout: vertical;
+}
+
+MessageContainer {
+    width: 100%;
+    padding: 1;
+    height: auto;
+}
+
+.tool-call-container {
+    color: white;
+    align: right bottom;
+
+}
+
+.tool-result-container {
+    align: right bottom;
+}
+
+.user-container {
+    align: left bottom;
+}
+
+.assistant-container {
+    align: right top;
+}
+
+
+
+.message-text {
+    background: blue;
+    max-width: 80vw;
+    width: auto;
+    height: auto;
+}
+
+Container:focus {
+    outline: vkey green;
+}
+
+Collapsible:focus {
+    outline: none;
+}
+
+Collapsible Static.collapsible-label:focus {
+    outline: none;
+    text-style: none;
+}
+
+Collapsible Button:focus {
+    outline: none;
+}

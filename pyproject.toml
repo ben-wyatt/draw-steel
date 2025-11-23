@@ -9,6 +9,7 @@ dependencies = [
     "fitz>=0.0.1.dev2",
     "ipykernel>=6.30.1",
     "jupyter>=1.1.1",
+    "lorem>=0.1.1",
     "markdown>=3.7",
     "markitdown>=0.0.1a4",
     "openai>=2.3.0",

@@ -22,6 +22,7 @@
 - print costs
 - chunk "caching": if it's been retrieved in this chat history then don't print it again
 - actually create chat history. with context caching?
+- LaTeX rendering?
 
 
 
@@ -49,9 +50,16 @@ upon retrieval: llm/deterministic decision to show image
 - late-interaction models: retrieve with higher top_k, then do token-level embedding to rerank a la colBERT. does it make sense given our total number of chunks is low?
 
 
+
+
 ## frontend
 
 - first round at front end -- does it require proper qdrant server?
  - to start should have only one page: chatbot with custom retrieval UI elements showing what data was retrieved.  should have easy click into PDF with side window
 - integrate abilities, classes, monster blocks as UI elements
 - second page: agentic search. LLM handles multiple calls to answer complex questions.
+
+
+## data sources
+
+grab from random websites?: https://medium.com/@pictor_dice_camp/draw-steel-is-a-lot-6843841de2f4

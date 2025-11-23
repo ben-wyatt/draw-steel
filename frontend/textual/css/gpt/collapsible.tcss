@@ -1,0 +1,41 @@
+CollapsibleToolWidget {
+    border-left: heavy $warning;
+    background: $surface-lighten-1;
+}
+
+CollapsibleToolWidget Horizontal {
+    height: 3;
+    padding: 0 1;
+    background: $surface-lighten-2;
+    border-bottom: solid $primary;
+}
+
+CollapsibleToolWidget Horizontal:hover {
+    background: $surface-lighten-3;
+}
+
+CollapsibleContent {
+    padding: 1;
+    display: block;
+}
+
+CollapsibleContent.-collapsed {
+    display: none;
+}
+
+CollapsibleToolWidget Button {
+    width: 3;
+    height: 3;
+    content-align: center middle;
+    border: none;
+}
+
+CollapsibleToolWidget Button:hover {
+    background: $surface-lighten-3;
+}
+
+CollapsibleToolWidget Static.collapsible-label {
+    width: 1fr;
+    padding: 0 1;
+}
+
