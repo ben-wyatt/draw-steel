@@ -1,0 +1,83 @@
+Screen {
+    layout: vertical;
+}
+
+Chat {
+    layout: vertical;
+    height: 1fr;
+}
+
+#chat-history {
+    background: $surface;
+    border: round $primary;
+    height: 1fr;
+    padding: 1 2;
+}
+
+#chat-input {
+    min-height: 3;
+}
+
+MessageContainer {
+    width: 100%;
+    height: auto;
+}
+
+.row {
+    width: 100%;
+    padding: 1;
+    height: auto;
+}
+
+.bubble {
+    background: $primary;
+    max-width: 75%;
+    height: auto;
+    padding: 1;
+    width: auto;
+    align: center middle;
+}
+
+.message {
+    width: auto;
+    height: auto;
+    background: $secondary;
+}
+
+.user-row {
+    align: right middle;
+}
+
+
+.assistant-row {
+    align: left middle;
+}
+
+.tool-row {
+    align: left middle;
+    margin: 0;
+    padding: 0;
+}
+
+.other-row {
+    align: left middle;
+}
+
+
+
+Container:focus {
+    outline: vkey $accent;
+}
+
+Collapsible:focus {
+    outline: none;
+}
+
+Collapsible Static.collapsible-label:focus {
+    outline: none;
+    text-style: none;
+}
+
+Collapsible Button:focus {
+    outline: none;
+}

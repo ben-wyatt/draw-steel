@@ -19,30 +19,40 @@ class MessageContainer(Container):
         match role:
             case "user":
                 self.row_classes = "row user-row"
-                self.classes = "user-container"
+                self.bubble_classes = "bubble user-bubble"
+                self.message_classes = "message user-message"
             case "assistant":
                 self.row_classes = "row assistant-row"
-                self.classes = "assistant-container"
+                self.bubble_classes = "bubble assistant-bubble"
+                self.message_classes = "message assistant-message"
             case "tool":
                 self.row_classes = "row tool-row"
-                self.classes = "tool-container"
+                self.bubble_classes = "bubble tool-bubble"
+                self.message_classes = "message tool-message"
             case "other":
                 self.row_classes = "row other-row"
-                self.classes = "other-container"
+                self.bubble_classes = "bubble other-bubble"
+                self.message_classes = "message other-message"
             case _:
                 raise ValueError(f"Invalid role: {self.role}")
 
     def compose(self) -> ComposeResult:
-        if self.role == "tool":
-            text = TextLorem(srange=(10, 200)).paragraph()
-            self.can_focus = False
-            with Collapsible(title="search_text(query='Draw Steel')", collapsed=True):
-                yield Static(
-                    self.message + "\n\n" + text,
-                    classes=self.role + " message-text",
-                )
-        else:
-            yield Static(self.message, classes=self.role + " message-text")
+        with Container(classes=self.row_classes):  # row
+            if self.role == "tool":
+                text = TextLorem(srange=(10, 200)).paragraph()
+                self.can_focus = False
+                with Collapsible(
+                    title="search_text(query='Draw Steel')",
+                    collapsed=True,
+                    classes=self.bubble_classes,
+                ):
+                    yield Static(
+                        self.message + "\n\n" + text,
+                        classes=self.message_classes,
+                    )
+            else:
+                with Container(classes=self.bubble_classes):
+                    yield Static(self.message, classes=self.message_classes)
 
 
 class ChatInput(Input):
@@ -66,7 +76,7 @@ class Chat(Widget):
 
     def compose(self) -> ComposeResult:
         with VerticalScroll(id="chat-history"):
-            for i in range(10):
+            for i in range(5):
                 yield MessageContainer(f"Hey I'm user {i}", role="user")
                 yield MessageContainer(f"Hey I'm assistant {i}", role="assistant")
                 yield MessageContainer("whatever", role="tool")
@@ -74,7 +84,7 @@ class Chat(Widget):
 
 
 class ChatApp(App):
-    CSS_PATH = "css/gpt/go_again.tcss"
+    CSS_PATH = "css/gpt/go_again_2.tcss"
     BINDINGS = [
         Binding(key="c", action="copy", description="copy highlighted content"),
         Binding(
