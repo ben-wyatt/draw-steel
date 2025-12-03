@@ -1,7 +1,21 @@
 I want to make a playable version of Draw Steel, the new MCDM TTRPG, with LLMs.
 There should be a few different parts to this. I can start with building a rules retrieval system, which I will call Rules Lawyer. 
 
+# Usage
 
+most up-to-date working version of this is `frontend/rich/ugly_chat/uglier_chat_react.py`. It uses OpenAI's Agent framework to provide queries as tools.
+
+To run:
+```bash
+docker start draw-steel-weaviate
+docker start draw-steel-phoenix
+uv run frontend/rich/ugly_chat/uglier_chat_react.py
+```
+
+Features:
+- model switching
+- chat sessions
+- 
 
 # Rules Lawyer
 - data mine the PDF
@@ -47,9 +61,11 @@ Run:
 uv run backend/ugly-chat/ugly-chat.py --model google/gemini-2.5-flash-lite --collection-name heroes-delian-full-v1
 ```
 
-# Future Ideas
+# Current Pain Points and Future Ideas
 
-Knowledge Graphs constructed via proper noun relationships like Obsidian. run retrieval on that.
+Hybrid retrieval on chunks doesn't cut it for questions like "walk me through the encounters of Castle Andreas". this requires reading a full ~5 pages and summarizing. How could we encourage the agent to grab more of what it needs?
+- chunk-specific retrieval tool: instead of using basic query, you say "I want the 5 chunks that come after this one". teach the LLM to keep going until it stops getting good results.
+- Knowledge Graphs constructed via proper noun relationships like Obsidian. run retrieval on that.
 
 Live Play feature that uses LLM to simulate a DM. It rolls dice, has dynamic in-context gamestate, can run combat through a custom game engine.
 
