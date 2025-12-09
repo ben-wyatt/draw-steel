@@ -15,3 +15,27 @@ Input {
     margin: 1 2;
 }
 
+UserMessage {
+    background: $primary 10%;
+    color: $text;
+    margin: 1;
+    margin-left: 8;
+    padding: 1 2 0 2;
+}
+
+AssistantMessage {
+    border: wide $success;
+    background: $success 10%;
+    color: $text;
+    margin: 1;
+    margin-right: 8;
+    padding: 1 2 0 2;
+}
+
+SystemMessage {
+    background: $warning 10%;
+    color: $text;
+    margin: 1;
+    padding: 1 2 0 2;
+    text-style: italic;
+}

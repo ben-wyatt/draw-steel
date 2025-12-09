@@ -35,34 +35,7 @@ class DrawSteelApp(App):
     """Draw Steel Expert chat application."""
 
     AUTO_FOCUS = "Input"
-    CSS_PATH = "css/newest_chat.tcss"
-
-    CSS = """
-    UserMessage {
-        background: $primary 10%;
-        color: $text;
-        margin: 1;
-        margin-left: 8;
-        padding: 1 2 0 2;
-    }
-
-    AssistantMessage {
-        border: wide $success;
-        background: $success 10%;
-        color: $text;
-        margin: 1;
-        margin-right: 8;
-        padding: 1 2 0 2;
-    }
-
-    SystemMessage {
-        background: $warning 10%;
-        color: $text;
-        margin: 1;
-        padding: 1 2 0 2;
-        text-style: italic;
-    }
-    """
+    CSS_PATH = "css/fugly_chat.tcss"
 
     def __init__(
         self,
@@ -137,22 +110,26 @@ class DrawSteelApp(App):
         self._run_query(query)
 
     @work(exclusive=True)
-    async def _run_query(self, query: str) -> str:
-        """Run the agent query asynchronously."""
+    async def _run_query(self, query: str) -> None:
+        """Run the agent query with streaming, updating UI progressively."""
         if self.expert is None:
-            return "Error: Expert not initialized"
-        result = await self.expert.run_agent(query, session_id=self.session_id)
-        return result.final_output
+            if self._pending_response:
+                self._pending_response.update("**Error:** Expert not initialized")
+                self._pending_response = None
+            return
 
-    def on_worker_state_changed(self, event) -> None:
-        """Handle worker completion."""
-        from textual.worker import WorkerState
-
-        if event.state == WorkerState.SUCCESS and self._pending_response:
-            self._pending_response.update(event.worker.result)
-            self._pending_response = None
-        elif event.state == WorkerState.ERROR and self._pending_response:
-            self._pending_response.update(f"**Error:** {event.worker.error}")
+        try:
+            accumulated = ""
+            async for chunk in self.expert.run_agent_streamed(
+                query, session_id=self.session_id
+            ):
+                accumulated += chunk
+                if self._pending_response:
+                    self._pending_response.update(accumulated)
+        except Exception as e:
+            if self._pending_response:
+                self._pending_response.update(f"**Error:** {e}")
+        finally:
             self._pending_response = None
 
     async def _handle_command(self, query: str, chat_view: VerticalScroll) -> None:
