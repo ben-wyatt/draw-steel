@@ -1,0 +1,17 @@
+/* Draw Steel Expert - Elegant Chat Styles */
+
+Screen {
+    layout: vertical;
+}
+
+#chat-view {
+    background: $surface;
+    height: 1fr;
+    padding: 1 2;
+}
+
+Input {
+    dock: bottom;
+    margin: 1 2;
+}
+
