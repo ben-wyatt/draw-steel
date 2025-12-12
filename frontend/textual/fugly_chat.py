@@ -2,15 +2,39 @@ import argparse
 
 from textual import on, work
 from textual.app import App, ComposeResult
-from textual.containers import VerticalScroll
-from textual.widgets import Footer, Header, Input, Markdown
+from textual.containers import Container, VerticalScroll
+from textual.validation import ValidationResult, Validator
+from textual.widgets import Collapsible, Footer, Header, Input, Markdown
 
-from backend.agents.draw_steel_expert_class import DrawSteelExpert
+from backend.agents.draw_steel_expert_class import DrawSteelExpert, StreamEvent
 from backend.utils.agent_models import MODEL_MAP
 
 # Default configuration
 DEFAULT_COLLECTION = "AllBooksV1"
 DEFAULT_MODEL = "gemini-flash-lite"
+
+# Known commands
+KNOWN_COMMANDS = {"/clear", "/help", "/models", "/model"}
+
+
+class CommandValidator(Validator):
+    """Validates that slash commands are recognized."""
+
+    def validate(self, value: str) -> ValidationResult:
+        """Check if value starting with / is a known command."""
+        if not value.startswith("/"):
+            # Not a command, always valid
+            return self.success()
+
+        # Extract the command part (before any arguments)
+        command = value.split(maxsplit=1)[0].lower()
+
+        if command in KNOWN_COMMANDS:
+            return self.success()
+        else:
+            return self.failure(
+                f"Unknown command: {command}. Type /help for available commands."
+            )
 
 
 class UserMessage(Markdown):
@@ -27,6 +51,12 @@ class AssistantMessage(Markdown):
 
 class SystemMessage(Markdown):
     """System/command output message."""
+
+    pass
+
+
+class ToolMessage(Markdown):
+    """Tool call/result message."""
 
     pass
 
@@ -49,12 +79,17 @@ class DrawSteelApp(App):
         self.expert = expert
         self.session_id: str | None = None
         self._pending_response: AssistantMessage | None = None
+        self._thinking_message: SystemMessage | None = None
 
     def compose(self) -> ComposeResult:
         yield Header()
         with VerticalScroll(id="chat-view"):
             yield SystemMessage(self._welcome_message())
-        yield Input(placeholder="Ask about Draw Steel...")
+        yield Input(
+            placeholder="Ask about Draw Steel...",
+            validators=[CommandValidator()],
+            validate_on=["submitted"],
+        )
         yield Footer()
 
     def on_mount(self) -> None:
@@ -91,6 +126,10 @@ class DrawSteelApp(App):
         if not query:
             return
 
+        # Don't process if validation failed
+        if event.validation_result and not event.validation_result.is_valid:
+            return
+
         event.input.clear()
         chat_view = self.query_one("#chat-view", VerticalScroll)
 
@@ -102,10 +141,11 @@ class DrawSteelApp(App):
         # Add user message
         await chat_view.mount(UserMessage(query))
 
-        # Add response placeholder and start query
-        self._pending_response = AssistantMessage("*Thinking...*")
-        await chat_view.mount(self._pending_response)
-        self._pending_response.anchor()
+        # Add a lightweight placeholder first (tool calls will follow, then assistant msg)
+        self._pending_response = None
+        self._thinking_message = SystemMessage("... thinking.")
+        await chat_view.mount(self._thinking_message)
+        self._thinking_message.anchor()
 
         self._run_query(query)
 
@@ -113,23 +153,153 @@ class DrawSteelApp(App):
     async def _run_query(self, query: str) -> None:
         """Run the agent query with streaming, updating UI progressively."""
         if self.expert is None:
-            if self._pending_response:
-                self._pending_response.update("**Error:** Expert not initialized")
-                self._pending_response = None
+            if self._thinking_message:
+                self._thinking_message.update("**Error:** Expert not initialized")
+                self._thinking_message = None
             return
 
+        chat_view = self.query_one("#chat-view", VerticalScroll)
+        tool_calls: dict[str, dict] = {}
+        tool_call_seq = 0
+        last_tool_call_id: str | None = None
+        accumulated_text = ""
+
         try:
-            accumulated = ""
-            async for chunk in self.expert.run_agent_streamed(
+            event: StreamEvent
+            async for event in self.expert.run_agent_streamed(
                 query, session_id=self.session_id
             ):
-                accumulated += chunk
-                if self._pending_response:
-                    self._pending_response.update(accumulated)
+                if event.type == "tool_call":
+                    # Mount a new ToolMessage (or search_text Collapsible) for this tool call
+                    tool_query = event.metadata.get("arguments", {}).get("query", "")
+                    content = f"**{event.data}**: {tool_query}"
+
+                    tool_call_id = event.metadata.get("tool_call_id")
+                    if not tool_call_id:
+                        tool_call_seq += 1
+                        tool_call_id = f"tool_call_{tool_call_seq}"
+                    last_tool_call_id = tool_call_id
+
+                    if event.data == "search_text":
+                        # IMPORTANT: mount chunk widgets into an inner container which is a *child*
+                        # of Collapsible content. Mounting directly on Collapsible won't collapse them.
+                        results_container = Container(classes="search-results")
+                        search_collapsible = Collapsible(
+                            results_container,
+                            title=f"search_text: {tool_query}",
+                            collapsed=False,
+                            classes="search-collapsible",
+                        )
+                        tool_calls[tool_call_id] = {
+                            "name": event.data,
+                            "query": tool_query,
+                            "collapsible": search_collapsible,
+                            "results_container": results_container,
+                        }
+                        await chat_view.mount(search_collapsible)
+                    else:
+                        tool_message = ToolMessage(content)
+                        tool_calls[tool_call_id] = {
+                            "name": event.data,
+                            "message": tool_message,
+                            "content": content,
+                        }
+                        await chat_view.mount(tool_message)
+                    chat_view.scroll_end(animate=False)
+
+                elif event.type == "tool_result":
+                    # Update the current tool message / collapsible with results
+                    tool_call_id = (
+                        event.metadata.get("tool_call_id") or last_tool_call_id
+                    )
+                    state = tool_calls.get(tool_call_id) if tool_call_id else None
+
+                    # If this was a search_text call, render the returned chunks as collapsibles.
+                    tool_name = state["name"] if state else None
+                    if tool_name == "search_text":
+                        if not isinstance(state, dict):
+                            continue
+                        collapsible = state.get("collapsible")
+                        results_container = state.get("results_container")
+                        if collapsible is not None:
+                            query_str = state.get("query", "")
+                            collapsible.title = (
+                                f"search_text: {query_str} | {event.data}"
+                            )
+                        results = event.metadata.get("results", [])
+                        if isinstance(results, list) and results:
+                            for r in results:
+                                if not isinstance(r, dict):
+                                    continue
+                                source_book = r.get("source_book", "unknown")
+                                page = r.get("page", "?")
+                                chunk_index = r.get("chunk_index", "?")
+                                score = r.get("score", None)
+                                score_str = (
+                                    f"{float(score):.3f}"
+                                    if isinstance(score, (int, float))
+                                    else "?"
+                                )
+                                section = r.get("section", [])
+                                section_str = ""
+                                if isinstance(section, list) and section:
+                                    section_str = " > " + " > ".join(
+                                        str(s) for s in section
+                                    )
+                                title = (
+                                    f"[b]{score_str}[/b] - {source_book}:{page}:{chunk_index}"
+                                    f"{section_str}"
+                                )
+                                chunk_text = r.get("text", "")
+                                target = (
+                                    results_container
+                                    if results_container is not None
+                                    else chat_view
+                                )
+                                await target.mount(
+                                    Collapsible(
+                                        Markdown(chunk_text),
+                                        title=title,
+                                        collapsed=True,
+                                        classes="chunk-collapsible",
+                                    )
+                                )
+                            chat_view.scroll_end(animate=False)
+                    else:
+                        if state and "message" in state:
+                            state["content"] = f"{state['content']} | {event.data}"
+                            state["message"].update(state["content"])
+
+                    if tool_call_id and tool_call_id in tool_calls:
+                        del tool_calls[tool_call_id]
+                    if tool_call_id == last_tool_call_id:
+                        last_tool_call_id = None
+
+                elif event.type == "text_delta":
+                    # First text -> mount assistant message after tool calls
+                    if self._pending_response is None:
+                        if self._thinking_message is not None:
+                            self._thinking_message.remove()
+                            self._thinking_message = None
+                        self._pending_response = AssistantMessage("")
+                        await chat_view.mount(self._pending_response)
+                        self._pending_response.anchor()
+
+                    # Update AssistantMessage with accumulated text
+                    accumulated_text += event.data
+                    if self._pending_response:
+                        self._pending_response.update(accumulated_text)
+
         except Exception as e:
             if self._pending_response:
                 self._pending_response.update(f"**Error:** {e}")
+            elif self._thinking_message:
+                self._thinking_message.update(f"**Error:** {e}")
         finally:
+            # If we never received text, leave tool call logs and clean up placeholder.
+            if self._pending_response is None and self._thinking_message is not None:
+                self._thinking_message.remove()
+                self._thinking_message = None
             self._pending_response = None
 
     async def _handle_command(self, query: str, chat_view: VerticalScroll) -> None:

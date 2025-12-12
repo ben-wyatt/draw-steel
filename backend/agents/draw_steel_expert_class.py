@@ -1,11 +1,12 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, AsyncGenerator, Dict, List, Literal, Optional, cast
 from uuid import uuid4
 
 from agents import Agent, Runner, RunResult, Session, SQLiteSession, function_tool
 from agents.extensions.models.litellm_model import LitellmModel
+from openai.types.responses import ResponseFunctionToolCall
 
 from backend.database import Database
 from backend.utils.agent_models import GEMINI_FLASH_LITE_MODEL
@@ -13,6 +14,15 @@ from backend.utils.agent_models import GEMINI_FLASH_LITE_MODEL
 DRAW_STEEL_EXPERT_PROMPT = Path(
     "backend/agents/prompts/draw_steel_expert_prompt.md"
 ).read_text()
+
+
+@dataclass
+class StreamEvent:
+    """Event yielded during streaming agent execution."""
+
+    type: Literal["text_delta", "tool_call", "tool_result"]
+    data: str  # text content, tool name, or result summary
+    metadata: dict = field(default_factory=dict)  # tool args, chunk ids, etc.
 
 
 @dataclass
@@ -91,6 +101,80 @@ class DrawSteelExpert:
             session = self.sessions[session_id]
         print(f"Using session id: {session_id}")
         return await Runner.run(self.agent, query, session=session)
+
+    async def run_agent_streamed(
+        self, query: str, session_id: Optional[str] = None
+    ) -> AsyncGenerator[StreamEvent, None]:
+        """Run the agent with streaming, yielding StreamEvent objects."""
+        if session_id:
+            if session_id not in self.sessions:
+                self.create_session(session_id)
+            session = self.sessions[session_id]
+        else:
+            session_id = self.create_session()
+            session = self.sessions[session_id]
+
+        result = Runner.run_streamed(self.agent, query, session=session)
+
+        async for event in result.stream_events():
+            if event.type == "raw_response_event":
+                if event.data.type == "response.output_text.delta":
+                    yield StreamEvent(type="text_delta", data=event.data.delta)
+
+            elif event.type == "run_item_stream_event":
+                item = event.item
+
+                if item.type == "tool_call_item":
+                    raw_item = item.raw_item
+                    if isinstance(raw_item, ResponseFunctionToolCall):
+                        args = json.loads(raw_item.arguments)
+                        tool_call_id = (
+                            getattr(raw_item, "call_id", None)
+                            or getattr(raw_item, "id", None)
+                            or None
+                        )
+                        yield StreamEvent(
+                            type="tool_call",
+                            data=raw_item.name,
+                            metadata={
+                                "arguments": args,
+                                "tool_call_id": tool_call_id,
+                            },
+                        )
+
+                elif item.type == "tool_call_output_item":
+                    raw_item = item.raw_item
+                    output = raw_item.get("output", "")
+                    if isinstance(output, str):
+                        tool_call_id = None
+                        if isinstance(raw_item, dict):
+                            raw_item_dict = cast(dict[str, Any], raw_item)
+                            tool_call_id = (
+                                raw_item_dict.get("tool_call_id")
+                                or raw_item_dict.get("call_id")
+                                or raw_item_dict.get("id")
+                            )
+                        try:
+                            output_json = json.loads(output)
+                            chunk_ids = [
+                                f"{c['source_book']}:{c['page']}:{c['chunk_index']}"
+                                for c in output_json
+                            ]
+                            yield StreamEvent(
+                                type="tool_result",
+                                data=f"Retrieved {len(chunk_ids)} chunks",
+                                metadata={
+                                    "tool_call_id": tool_call_id,
+                                    "chunk_ids": chunk_ids,
+                                    "results": output_json,
+                                },
+                            )
+                        except (json.JSONDecodeError, KeyError):
+                            yield StreamEvent(
+                                type="tool_result",
+                                data="Retrieved results",
+                                metadata={"tool_call_id": tool_call_id},
+                            )
 
     def update_retrieval_config(self, retrieval_config: RetrievalConfig):
         self.retrieval_config = retrieval_config
