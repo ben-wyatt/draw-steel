@@ -29,13 +29,23 @@ MessageContainer {
     height: auto;
 }
 
+
 .bubble {
-    background: $primary;
     max-width: 75%;
+    width: auto;
     height: auto;
     padding: 1;
+    background: $primary;
+    content-align: left middle;
+}
+
+Markdown {
+    background: $accent;
+    padding: 0;
+    margin: 0;
+    height: auto;
     width: auto;
-    align: center middle;
+    max-width: 1fr;
     text-wrap: wrap;
 }
 
@@ -45,24 +55,19 @@ MessageContainer {
 }
 
 .user-row {
-    align: right middle;
+    align-horizontal: right;
+    align-vertical: middle;
 }
 
 
-.assistant-row {
-    align: left middle;
-    height: auto;
-}
-
-.tool-row {
-    align: left middle;
-    margin: 0;
-    padding: 0;
-}
-
+.assistant-row,
+.tool-row,
 .other-row {
-    align: left middle;
+    align-horizontal: left;
+    align-vertical: middle;
 }
+
+
 
 
 

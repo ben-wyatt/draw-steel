@@ -41,7 +41,6 @@ MessageContainer {
 .message {
     width: auto;
     height: auto;
-    background: $secondary;
 }
 
 .user-row {

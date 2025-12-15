@@ -6,7 +6,15 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, VerticalScroll
 from textual.widget import Widget
-from textual.widgets import Collapsible, Footer, Header, Input, LoadingIndicator, Static
+from textual.widgets import (
+    Collapsible,
+    Footer,
+    Header,
+    Input,
+    LoadingIndicator,
+    Markdown,
+    Static,
+)
 from textual.worker import Worker, WorkerState
 
 from backend.agents.draw_steel_expert_class import DrawSteelExpert
@@ -54,13 +62,13 @@ class MessageContainer(Container):
                     collapsed=True,
                     classes=self.bubble_classes,
                 ):
-                    yield Static(
+                    yield Markdown(
                         self.message,
                         classes=self.message_classes,
                     )
             else:
                 with Container(classes=self.bubble_classes):
-                    yield Static(self.message, classes=self.message_classes)
+                    yield Markdown(self.message, classes=self.message_classes)
 
 
 class ThinkingIndicator(Container):
@@ -159,9 +167,9 @@ class ChatApp(App):
             f"Collection: {self.collection_name}\n"
             f"Model: {self.current_model_name}\n\n"
             f"Commands:\n"
-            f"  /clear  - Start new session\n"
-            f"  /model <name> - Switch model\n"
-            f"  /models - List available models\n"
+            f"  /clear  - Start new session\n\n"
+            f"  /model <name> - Switch model\n\n"
+            f"  /models - List available models\n\n"
             f"  /help   - Show this message",
             role="other",
         )
