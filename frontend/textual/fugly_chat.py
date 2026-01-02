@@ -10,8 +10,8 @@ from backend.agents.draw_steel_expert_class import DrawSteelExpert, StreamEvent
 from backend.utils.agent_models import MODEL_MAP
 
 # Default configuration
-DEFAULT_COLLECTION = "AllBooksV1"
-DEFAULT_MODEL = "gemini-flash-lite"
+DEFAULT_COLLECTION = "AllBooksV2"
+DEFAULT_MODEL = "gemini-flash"
 
 # Known commands
 KNOWN_COMMANDS = {"/clear", "/help", "/models", "/model"}

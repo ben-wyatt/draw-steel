@@ -1,6 +1,6 @@
 from agents.extensions.models.litellm_model import LitellmModel
 
-from backend.utils.keys import get_openrouter_api_key
+from backend.utils.keys import get_gemini_api_key, get_openrouter_api_key
 
 # GEMINI
 GEMINI_FLASH_LITE_MODEL = LitellmModel(
@@ -16,9 +16,14 @@ GEMINI_FLAST_MODEL = LitellmModel(
 )
 
 GEMINI_PRO_MODEL = LitellmModel(
-    model="openrouter/google/gemini-2.5-pro",
+    model="openrouter/google/gemini-3-pro-preview",
     base_url="https://openrouter.ai/api/v1",
     api_key=get_openrouter_api_key(),
+)
+
+GEMINI_PRO_FREE = LitellmModel(
+    model="gemini/gemini-3-pro-preview",
+    api_key=get_gemini_api_key(),
 )
 
 # CLAUDE
@@ -64,4 +69,5 @@ MODEL_MAP = {
     "gpt": GPT_MODEL,
     "gpt-mini": GPT_MINI_MODEL,
     "gpt-nano": GPT_NANO_MODEL,
+    "gemini-pro-free": GEMINI_PRO_FREE,
 }

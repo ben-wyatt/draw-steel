@@ -1,73 +1,76 @@
-"""Utility functions for retrieving API keys from environment or configuration files."""
+"""Utilities for retrieving API keys from the environment (optionally via `.env`).
+
+Goal: adding a new key should not require copy/pasting a whole new function.
+
+Use `get_secret("SOME_ENV_VAR")`, or keep small wrapper functions for common keys.
+"""
+
+from __future__ import annotations
 
 import os
 from pathlib import Path
 from typing import Optional
 
+try:
+    # Included in this repo's dependencies (see pyproject.toml).
+    from dotenv import load_dotenv
+except Exception:  # pragma: no cover
+    load_dotenv = None  # type: ignore[assignment]
 
-def get_openrouter_api_key() -> Optional[str]:
-    """Get OPENROUTER_API_KEY from environment or ~/.zshenv file."""
-    # First check environment
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if api_key:
-        return api_key
+_DOTENV_LOADED = False
 
-    # Try loading from ~/.zshenv
-    zshenv_path = Path.home() / ".zshenv"
-    if zshenv_path.exists():
-        try:
-            with open(zshenv_path, "r") as f:
-                for line in f:
-                    line = line.strip()
-                    # Handle both "export OPENROUTER_API_KEY=" and "OPENROUTER_API_KEY="
-                    if line.startswith("export OPENROUTER_API_KEY="):
-                        value = line.split("=", 1)[1].strip()
-                    elif line.startswith("OPENROUTER_API_KEY="):
-                        value = line.split("=", 1)[1].strip()
-                    else:
-                        continue
 
-                    # Remove quotes if present
-                    if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    elif value.startswith("'") and value.endswith("'"):
-                        value = value[1:-1]
-                    return value
-        except Exception:
-            pass
+def _project_root() -> Path:
+    # backend/utils/keys.py -> backend/ -> repo root
+    return Path(__file__).resolve().parents[2]
+
+
+def _ensure_dotenv_loaded() -> None:
+    """Load `.env` files exactly once (best effort).
+
+    This is explicit and deterministic compared to scraping shell rc files.
+    """
+    global _DOTENV_LOADED
+    if _DOTENV_LOADED or load_dotenv is None:
+        return
+
+    # Project-local env files (should be gitignored).
+    root = _project_root()
+    load_dotenv(root / ".env", override=False)
+    load_dotenv(root / ".env.local", override=False)
+
+    # Optional per-user config (not tied to a specific shell).
+    load_dotenv(Path.home() / ".config" / "draw-steel" / ".env", override=False)
+
+    _DOTENV_LOADED = True
+
+
+def get_secret(
+    name: str,
+) -> Optional[str]:
+    """Get an env var from `os.environ`, optionally loading `.env` files once."""
+    value = os.getenv(name)
+    if value:
+        return value
+
+    _ensure_dotenv_loaded()
+    value = os.getenv(name)
+    if value:
+        return value
 
     return None
+
+
+def get_openrouter_api_key() -> Optional[str]:
+    """Get OPENROUTER_API_KEY from environment / dotenv."""
+    return get_secret("OPENROUTER_API_KEY")
 
 
 def get_hf_token() -> Optional[str]:
-    """Get HF_TOKEN from environment or ~/.zshenv file."""
-    # First check environment
-    token = os.getenv("HF_TOKEN")
-    if token:
-        return token
+    """Get HF_TOKEN from environment / dotenv."""
+    return get_secret("HF_TOKEN")
 
-    # Try loading from ~/.zshenv
-    zshenv_path = Path.home() / ".zshenv"
-    if zshenv_path.exists():
-        try:
-            with open(zshenv_path, "r") as f:
-                for line in f:
-                    line = line.strip()
-                    # Handle both "export HF_TOKEN=" and "HF_TOKEN="
-                    if line.startswith("export HF_TOKEN="):
-                        value = line.split("=", 1)[1].strip()
-                    elif line.startswith("HF_TOKEN="):
-                        value = line.split("=", 1)[1].strip()
-                    else:
-                        continue
 
-                    # Remove quotes if present
-                    if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    elif value.startswith("'") and value.endswith("'"):
-                        value = value[1:-1]
-                    return value
-        except Exception:
-            pass
-
-    return None
+def get_gemini_api_key() -> Optional[str]:
+    """Get GEMINI_API_KEY from environment / dotenv."""
+    return get_secret("GEMINI_API_KEY")

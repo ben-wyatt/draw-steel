@@ -8,22 +8,8 @@
  - models
  - rules
  - structured_filtering
-- fastAPI backend: needs architecting
-- rewrite ugly-chat for less code-nesting (quality)
 - what to do with rules files: are they useful still?
-- keep working on object-oriented agent
-
-## uglier_chat
-
-- comb through interface
-- integrate `test_streaming.py`
-- expand context to previous and future chunks (database)
-- update tool settings on the fly based on commands
-- print costs
-- chunk "caching": if it's been retrieved in this chat history then don't print it again
-- actually create chat history. with context caching?
-- LaTeX rendering?
-
+- fix the database
 
 
 
